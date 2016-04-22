@@ -92,7 +92,7 @@
 //calibration parameters -- consult AW for calibration routine
 #if TRACKTYPE == 0
 
-	//Flock of Birds calibration performed 9/18/2012 using pumbline method
+	//Flock of Birds calibration performed 4/12/2016 by Aaron Wong using pumbline method and modified calibration routine.
 	#define CALxOFFSET 0.61350f   //meters
 	#define CALyOFFSET 0.17690f   //meters
 	#define CALxyROTANG -0.01938f //radians
