@@ -59,7 +59,7 @@ DataWriter::DataWriter(TrackSYSCONFIG *sysconfig, const char* filename)
 		file << "--" << endl;
 		
 		file << "Device_Num "
-			 << "FakeTime "
+			 << "TrackerTime "
 			 << "Trial "
 			 << "HandX "
 			 << "HandY "
@@ -97,7 +97,9 @@ void DataWriter::Record(int deviceNo, TrackDATAFRAME frame, TargetFrame Target)
 	if (file.is_open())
 	{
 		file << deviceNo << " "
+			<< std::fixed << showpoint << std::setprecision(5) 
 			<< frame.time << " "
+			<< std::resetiosflags( std::ios::fixed | std::ios::showpoint )
 			<< Target.trial << " "
 			<< frame.x << " "
 			<< frame.y << " "

@@ -312,8 +312,8 @@ int TrackBird::GetUpdatedSample(TrackSYSCONFIG *sysconfig,TrackDATAFRAME DataBir
 				//Tracker Aximuth (rotation from XZ plane) = data elevation?
 				//Tracker Elevation (rotation from XY plane)= data azimuth?
 				//Tracker Roll (rotation from about Z axis)= data roll?
-				DataBirdFrame[j].time = frame.dwTime;  //convert time in msec to time in sec.
-				DataBirdFrame[j].etime = frame.dwTime-birds_start;
+				DataBirdFrame[j].time = double(frame.dwTime)/1000.0f;  //convert time in msec to time in sec.
+				DataBirdFrame[j].etime = double(frame.dwTime)-birds_start;
 				DataBirdFrame[j].x = bird_data.position.nY;
 				DataBirdFrame[j].y = bird_data.position.nZ;
 				DataBirdFrame[j].z = bird_data.position.nX;
