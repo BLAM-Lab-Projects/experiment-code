@@ -93,9 +93,9 @@
 #if TRACKTYPE == 0
 
 	//Flock of Birds calibration performed 9/18/2012 using pumbline method
-	#define CALxOFFSET 0.62445f   //meters
-	#define CALyOFFSET 0.17263f   //meters
-	#define CALxyROTANG -0.02140f //radians
+	#define CALxOFFSET 0.61350f   //meters
+	#define CALyOFFSET 0.17690f   //meters
+	#define CALxyROTANG -0.01938f //radians
 
 #else
 
