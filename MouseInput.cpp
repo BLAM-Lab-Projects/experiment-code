@@ -4,8 +4,6 @@
 int MouseInput::GetFrame(TrackDATAFRAME DataMouseFrame[])
 {
 	DataMouseFrame[0].ValidInput = 1;
-	//for (int i = 1; i < BIRDCOUNT+1; i++)
-	//	DataMouseFrame->ValidInputs[i] = 0; //we assume we track either the mouse or the birds
 
 	DataMouseFrame[0].x = x;
 	DataMouseFrame[0].y = y;

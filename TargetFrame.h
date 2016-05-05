@@ -16,7 +16,6 @@ struct TargetFrame
 	float tgtx2;
 	float tgty2;
 
-	//GLfloat rWin;  //radius of circular window around target
 	int trace;
 	int path;
 	int region;

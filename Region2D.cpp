@@ -9,14 +9,6 @@
 #include "Object2D.h"
 #include "HandCursor.h"
 
-/*Region2D::Region2D()
-{
-	color[0] = 0;
-	color[1] = 0;
-	color[2] = 0;
-}
-*/
-
 void Region2D::SetNSides(GLint sides)
 {
 	nSides = sides;
@@ -78,25 +70,21 @@ Region2D Region2D::LoadPolyFromFile(char* filePath)
 	else
 		std::cerr << "Opened Region File " << filePath << std::endl;
 
-	//regionfile.getline(tmpline,sizeof(tmpline),'\n');
-	//if (!regionfile.eof())
-	//	sscanf(tmpline,'%d', &nSides);
-
 	regionfile.getline(tmpline,sizeof(tmpline),'\n');
 	if (!regionfile.eof())
 	{
-		sscanf(tmpline,"%f %f %f",&tmpclr[0],&tmpclr[1],&tmpclr[2]);
+		sscanf(tmpline,"%f %f %f", &tmpclr[0], &tmpclr[1], &tmpclr[2]);
 		region.SetPolyColor(tmpclr);
 	}
 	else
 		return(region);
 
-	regionfile.getline(tmpline,sizeof(tmpline),'\n');
-	while(!regionfile.eof() && nSides<10)
+	regionfile.getline(tmpline, sizeof(tmpline), '\n');
+	while(!regionfile.eof() && nSides < 10)
 	{
-			sscanf(tmpline, "%f %f",&tmpverts[nSides][0],&tmpverts[nSides][1]);
+			sscanf(tmpline, "%f %f", &tmpverts[nSides][0], &tmpverts[nSides][1]);
 			nSides++;
-			regionfile.getline(tmpline,sizeof(tmpline),'\n');
+			regionfile.getline(tmpline, sizeof(tmpline), '\n');
 	}
 	region.SetNSides(nSides);
 	region.SetPolyVerts(tmpverts);
@@ -111,24 +99,18 @@ void Region2D::Draw(GLfloat centerx, GLfloat centery)
 			
 	// Draw the polygon
 	glColor3f(color[0],color[1],color[2]);
-	//glColor4f(color[0],color[1],color[2],1.0f);
 	
 	glBegin(GL_TRIANGLE_FAN);
 
 	for (int i = 0; i<nSides; i++)
 	{
-		glVertex3f(Vertices[i][0]+centerx,Vertices[i][1]+centery, 0.0f);
+		glVertex3f(Vertices[i][0] + centerx, Vertices[i][1] + centery, 0.0f);
 	}
 	glEnd();
-	glColor3f(1.0f,1.0f,1.0f);
-	//glColor4f(1.0f,1.0f,1.0f,0.0f);
-
-	//glClearColor(255, 255, 255, 0);
-	//glEnable (GL_BLEND);
-	//glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	glColor3f(1.0f, 1.0f, 1.0f);
 }
 
-bool Region2D::InRegion(Object2D* cursor,GLfloat centerx, GLfloat centery)
+bool Region2D::InRegion(Object2D* cursor, GLfloat centerx, GLfloat centery)
 {
 	return InRegion(cursor->GetX(), cursor->GetY(), centerx, centery);
 }
@@ -143,8 +125,8 @@ bool Region2D::InRegion(GLfloat xcurs, GLfloat ycurs, GLfloat centerx, GLfloat c
 	//ray-casting technique
 	//adapted from: http://sidvind.com/wiki/Point-in-polygon:_Jordan_Curve_Theorem
 	int crossings = 0;
-	float x1,x2;
-	float y1,y2;
+	float x1, x2;
+	float y1, y2;
 	double k;
 	bool inregion = false;
 
@@ -153,27 +135,27 @@ bool Region2D::InRegion(GLfloat xcurs, GLfloat ycurs, GLfloat centerx, GLfloat c
 	for (int i = 0; i < nSides; i++)
 	{
 		//make sure it doesn't matter if the line goes from left to right or right to left
-		if( (Vertices[i][0]+centerx) < (Vertices[(i+1)%nSides][0]+centerx) )
+		if( (Vertices[i][0] + centerx) < (Vertices[(i + 1)%nSides][0]+centerx) )
 		{
-			x1 = (Vertices[i][0]+centerx);
-			x2 = (Vertices[(i+1)%nSides][0]+centerx);
+			x1 = (Vertices[i][0] + centerx);
+			x2 = (Vertices[(i+1)%nSides][0] + centerx);
 		}
 		else
 		{
-			x1 = (Vertices[(i+1)%nSides][0]+centerx);
-			x2 = (Vertices[i][0]+centerx);
+			x1 = (Vertices[(i + 1)%nSides][0] + centerx);
+			x2 = (Vertices[i][0] + centerx);
 		}
 
 		//make sure it doesn't matter if the line goes from up to down or down to up
-		if( (Vertices[i][1]+centery) < (Vertices[(i+1)%nSides][1]+centery) )
+		if( (Vertices[i][1] + centery) < (Vertices[(i + 1)%nSides][1] + centery) )
 		{
-			y1 = (Vertices[i][1]+centery);
-			y2 = (Vertices[(i+1)%nSides][1]+centery);
+			y1 = (Vertices[i][1] + centery);
+			y2 = (Vertices[(i + 1)%nSides][1] + centery);
 		}
 		else
 		{
-			y1 = (Vertices[(i+1)%nSides][1]+centery);
-			y2 = (Vertices[i][1]+centery);
+			y1 = (Vertices[(i + 1)%nSides][1] + centery);
+			y2 = (Vertices[i][1] + centery);
 		}
 		//check to see if the ray can cross the line
 		if (xcurs > x1 && xcurs <= x2 && (ycurs < y1 || ycurs <= y2))
@@ -189,7 +171,7 @@ bool Region2D::InRegion(GLfloat xcurs, GLfloat ycurs, GLfloat centerx, GLfloat c
 			else
 				k = dy/dx;
 
-			float m = (Vertices[i][1]+centery) - k*(Vertices[i][0]+centerx);
+			float m = (Vertices[i][1] + centery) - k*(Vertices[i][0] + centerx);
 
 			//find if the ray crosses the line
 			float y2 = k*xcurs + m;
@@ -203,40 +185,6 @@ bool Region2D::InRegion(GLfloat xcurs, GLfloat ycurs, GLfloat centerx, GLfloat c
 		inregion = true;
 	
 	return(inregion);
-
-	//return(crossings%2);
-
-	/*
-	//simple code; works for some simple (convex) polygons.
-
-	int stat;
-	float temppos;
-
-	stat = 0;
-
-	//assume the vertices are defined from the bottom left corner and proceed ccw
-	//compute the relative x or y position of the line using point-slope form
-	temppos = vertices[0][0] + (vertices[3][0]-vertices[0][0])/(vertices[3][1]-vertices[0][1])*(cursor->GetY()-vertices[0][1]);
-	if(cursor->GetX() > temppos)
-		stat |= WIND_LEFT;
-
-	temppos = vertices[1][0] + (vertices[2][0]-vertices[1][0])/(vertices[2][1]-vertices[1][1])*(cursor->GetY()-vertices[1][1]);
-	if(cursor->GetX() < temppos)
-		stat |= WIND_RIGHT;
-
-	temppos = vertices[0][1] + (vertices[1][1]-vertices[0][1])/(vertices[1][0]-vertices[0][0])*(cursor->GetX()-vertices[0][0]);
-	if(cursor->GetY() > temppos)
-		stat |= WIND_BELOW;
-
-	temppos = vertices[3][1] + (vertices[2][1]-vertices[3][1])/(vertices[2][0]-vertices[3][0])*(cursor->GetX()-vertices[3][0]);
-	if(cursor->GetY() < temppos)
-		stat |= WIND_ABOVE;
-	
-	if (stat == 15)
-		return(1);
-	else
-		return(0);
-	*/
 
 }
 

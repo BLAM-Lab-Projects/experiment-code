@@ -22,7 +22,6 @@ private:
 	GLfloat borderWidth;
 	GLfloat borderColor[3];
 
-	//Object2D obj;
 public:
 	// constructor
 	Circle(GLfloat x, GLfloat y, GLfloat diam, GLfloat clr[]);

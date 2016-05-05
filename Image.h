@@ -17,9 +17,9 @@ public:
 	// ratio defines the resolution of the image in meters per pixel
 	Image(SDL_Surface* surface, float ratio = PHYSICAL_RATIO);
 	~Image() { }
-	/* Creates an Image object based on the supplied file path and returns a
-	 * pointer to the new Image. If the image could not be created, returns null.
-	 */
+	// Creates an Image object based on the supplied file path and returns a
+	// pointer to the new Image. If the image could not be created, returns null.
+
 	static Image* LoadFromFile(char* filePath);
 	// Get the OpenGL texture for this Image
 	GLuint GetTexture() const;

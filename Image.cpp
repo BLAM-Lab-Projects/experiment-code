@@ -77,11 +77,7 @@ void Image::Draw(GLfloat xPos, GLfloat yPos, GLfloat theta)
 }
 
 void Image::Draw(GLfloat xPos, GLfloat yPos, GLfloat w, GLfloat h, GLfloat theta)
-{
-	
-	//DrawAlign(xPos,yPos,width,height,theta,0);
-	
-	
+{	
 	glBindTexture(GL_TEXTURE_2D, texture);
 	glEnable(GL_TEXTURE_2D);
 	
@@ -141,7 +137,7 @@ void Image::DrawAlign(GLfloat xPos, GLfloat yPos, GLfloat w, GLfloat h, GLint cf
 		glEnd();
 
 	}
-	else if (cflag==3) //left-align 
+	else if (cflag == 3) //left-align 
 	{
 		
 		// Draw a quad with the texture on it

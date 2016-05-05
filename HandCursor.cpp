@@ -5,17 +5,8 @@
 
 HandCursor::HandCursor(Circle* c)
 {
-
-	//GLfloat color[3];
-	//color[0] = 0.0f;
-	//color[1] = 0.0f;
-	//color[2] = 1.0f;
-
 	circ = c;
-	//circ->SetColor(color);
-	//circ->BorderOff();
 	circ->On();
-	//draw = 1;
 
 	yvel = 0;
 	xvel = 0;
@@ -35,7 +26,7 @@ HandCursor::HandCursor(Circle* c)
 	
 	clamp = 0;
 
-	for (int i=0; i<5; i++)
+	for (int i = 0; i < 5; i++)
 	{
 		xhist[i] = 0;
 		yhist[i] = 0;
@@ -46,11 +37,7 @@ HandCursor::HandCursor(Circle* c)
 
 void HandCursor::Draw()
 {
-	//if(draw)
-	//{
-	//	circ->On();
-		circ->Draw();
-	//}
+	circ->Draw();
 }
 
 GLint HandCursor::drawState()
@@ -65,12 +52,11 @@ void HandCursor::UpdatePos(GLfloat x, GLfloat y)
 
 	xpos = x;
 	ypos = y;
-	//circ->SetPos(x,y);
 
-	for (int i=NHIST-1; i>0; i--)
+	for (int i = (NHIST - 1); i > 0; i--)
 	{
-		xhist[i] = xhist[i-1];
-		yhist[i] = yhist[i-1];
+		xhist[i] = xhist[i - 1];
+		yhist[i] = yhist[i - 1];
 	}
 	xhist[0] = x;
 	yhist[0] = y;
@@ -79,7 +65,7 @@ void HandCursor::UpdatePos(GLfloat x, GLfloat y)
 	// get mean
 	GLfloat xmean = 0;
 	GLfloat ymean = 0;
-	for (int i=0; i<NHIST; i++)
+	for (int i = 0; i < NHIST; i++)
 	{
 		xmean += xhist[i];
 		ymean += yhist[i];
@@ -94,7 +80,7 @@ void HandCursor::UpdatePos(GLfloat x, GLfloat y)
 
 	if(clamp)
 	{
-		GLfloat r = sqrtf((x-x0)*(x-x0) + (y-y0)*(y-y0));
+		GLfloat r = sqrtf((x - x0)*(x - x0) + (y - y0)*(y - y0));
 		if(1)
 		{
 			xScr = r*sin(thetaClamp) + x0;
@@ -109,18 +95,18 @@ void HandCursor::UpdatePos(GLfloat x, GLfloat y)
 	else
 	{
 		// apply rotation
-		xScr = rotMat[0]*(x-x0) + rotMat[1]*(y-y0) + x0;
-		yScr = rotMat[2]*(x-x0) + rotMat[3]*(y-y0) + y0;
+		xScr = rotMat[0]*(x - x0) + rotMat[1]*(y - y0) + x0;
+		yScr = rotMat[2]*(x - x0) + rotMat[3]*(y - y0) + y0;
 
 		// apply gain
-		xScr = xgain*(xScr-x0) + x0;
-		yScr = ygain*(yScr-y0) + y0;
+		xScr = xgain*(xScr - x0) + x0;
+		yScr = ygain*(yScr - y0) + y0;
 	}
 
-	for (int i=NHIST-1; i>0; i--)
+	for (int i = (NHIST - 1); i > 0; i--)
 	{
-		xhistScr[i] = xhistScr[i-1];
-		yhistScr[i] = yhistScr[i-1];
+		xhistScr[i] = xhistScr[i - 1];
+		yhistScr[i] = yhistScr[i - 1];
 	}
 	xhistScr[0] = xScr;
 	yhistScr[0] = yScr;
@@ -188,27 +174,14 @@ void HandCursor::Null()
 
 void HandCursor::SetClampC(Circle* c1, Circle* c2)
 {
-	GLfloat th = atan2(c2->GetX()-c1->GetX(),c2->GetY() - c1->GetY());
+	GLfloat th = atan2(c2->GetX()-c1->GetX(), c2->GetY() - c1->GetY());
 	SetClamp(th*PI/180);
 }
 
 void HandCursor::SetClamp(GLfloat th)
 {
-	/* projection onto fixed line
-	th = th*180/3.14159;
-	rotMat[0] = cos(th)*cos(th);
-	rotMat[1] = -cos(th)*sin(th);
-	rotMat[2] = -cos(th)*sin(th);
-	rotMat[3] = sin(th)*sin(th);*/
-
 	clamp = 1;
 	thetaClamp = th*180/PI; // clamp angle
-	/*
-	rotMat[0]=cos(th);
-	rotMat[1]=cos(th);
-	rotMat[2]=sin(th);
-	rotMat[3]=sin(th);
-	*/
 }
 
 void HandCursor::ClampOff()
@@ -218,13 +191,11 @@ void HandCursor::ClampOff()
 
 void HandCursor::On()
 {
-	//draw = 1;
 	circ->On();
 }
 
 void HandCursor::Off()
 {
-	//draw = 0;
 	circ->Off();
 }
 
