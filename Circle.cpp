@@ -7,8 +7,6 @@
 
 #include "Circle.h"
 
-//#include "Object2D.h"
-
 Circle::Circle(GLfloat x, GLfloat y, GLfloat diam, GLfloat clr[])
 {
 	diameter = diam;
@@ -25,9 +23,6 @@ Circle::Circle(GLfloat x, GLfloat y, GLfloat diam, GLfloat clr[])
 	borderColor[1] = 0.0f;
 	borderColor[2] = 0.0f;
 
-	//vertices = (GLfloat**) malloc(2*sizeof(GLfloat*));  
-	//vertices[1] = (GLfloat*) malloc(nVerts*sizeof(GLfloat)); 
-	//vertices[2] = (GLfloat*) malloc(nVerts*sizeof(GLfloat)); 
 }
 
 void Circle::SetDiameter(GLfloat diam)
@@ -45,13 +40,13 @@ void Circle::SetRadius(GLfloat rad)
 void Circle::MakeVerts()
 {
 	nVerts = 100; // use 100 vertices
-	for (int i=0; i<nVerts; i++)
+	for (int i = 0; i < nVerts; i++)
 	{
-		GLfloat theta = 2*3.14159*i/(nVerts-1);
+		GLfloat theta = 2*3.14159*i/(nVerts - 1);
 		vertices[0][i] = (diameter/2)*sin(theta);
 		vertices[1][i] = (diameter/2)*cos(theta);
-		verticesInner[0][i] = ((diameter/2)-borderWidth)*sin(theta);
-		verticesInner[1][i] = ((diameter/2)-borderWidth)*cos(theta);
+		verticesInner[0][i] = ((diameter/2) - borderWidth) * sin(theta);
+		verticesInner[1][i] = ((diameter/2) - borderWidth) * cos(theta);
 	}
 }
 
@@ -83,42 +78,41 @@ void Circle::Draw()
 		if(border)
 		{
 			// Draw border circle first
-			glColor3f(borderColor[0],borderColor[1],borderColor[2]);
+			glColor3f(borderColor[0], borderColor[1], borderColor[2]);
 			glBegin(GL_TRIANGLE_FAN);
 			glVertex3f(xpos, ypos, 0);	
-			for (int i = 0; i<nVerts; i++)
+			for (int i = 0; i < nVerts; i++)
 			{
-				glVertex3f(vertices[0][i] + xpos,vertices[1][i] + ypos, 0.0f);
+				glVertex3f(vertices[0][i] + xpos, vertices[1][i] + ypos, 0.0f);
 			}
 			glEnd();
 
-			glColor3f(color[0],color[1],color[2]);
+			glColor3f(color[0], color[1], color[2]);
 			glBegin(GL_TRIANGLE_FAN);
 			glVertex3f(xpos, ypos, 0);	
-			for (int i = 0; i<nVerts; i++)
+			for (int i = 0; i < nVerts; i++)
 			{
-				glVertex3f(verticesInner[0][i] + xpos,verticesInner[1][i] + ypos, 0.0f);
+				glVertex3f(verticesInner[0][i] + xpos, verticesInner[1][i] + ypos, 0.0f);
 			}
 
 			glEnd();
-			glColor3f(1.0f,1.0f,1.0f);
+			glColor3f(1.0f, 1.0f, 1.0f);
 		}
 		else
 		{
 			// Draw the polygon
-			glColor3f(color[0],color[1],color[2]);
-			//glColor4f(color[0],color[1],color[2],1.0f);
+			glColor3f(color[0], color[1], color[2]);
 	
 			glBegin(GL_TRIANGLE_FAN);
 
 			glVertex3f(xpos, ypos, 0);
-			for (int i = 0; i<nVerts; i++)
+			for (int i = 0; i < nVerts; i++)
 			{
-				glVertex3f(vertices[0][i] + xpos,vertices[1][i] + ypos, 0.0f);
+				glVertex3f(vertices[0][i] + xpos, vertices[1][i] + ypos, 0.0f);
 			}
 
 			glEnd();
-			glColor3f(1.0f,1.0f,1.0f);
+			glColor3f(1.0f, 1.0f, 1.0f);
 		}
 	}
 

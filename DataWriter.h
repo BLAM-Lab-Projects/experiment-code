@@ -16,7 +16,6 @@ public:
 	/* filename defines a custom name to save the file as. If filename is NULL,
 	 * a name will be generated automatically.
 	 */
-	//DataWriter(BIRDSYSTEMCONFIG *sysconfig, const char* filename = NULL);
 	DataWriter(TrackSYSCONFIG *sysconfig, const char* filename = NULL);
 	DataWriter();
 	~DataWriter();

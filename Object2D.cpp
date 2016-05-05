@@ -56,18 +56,6 @@ float Object2D::Distance(Object2D* ob1, Object2D* ob2)
 	return Distance(ob1, ob2->GetX(), ob2->GetY());
 }
 
-/*
-float Object2D::Distance(Object2D* ob1, HandCursor *cursor);
-{
-	return Distance(ob1, cursor->GetX(), cursor->GetY());
-}
-
-float Object2D::Distance(Object2D* ob1, Circle *circ);
-{
-	return Distance(ob1, circ->GetX(), circ->GetY());
-}
-*/
-
 float Object2D::Distance(Object2D* ob1, GLfloat x, GLfloat y)
 {
 	return sqrtf(powf(x - ob1->xPos, 2.0f) + powf(y - ob1->yPos, 2.0f));

@@ -9,19 +9,17 @@
 
 using namespace std;
 
-//DataWriter::DataWriter(BIRDSYSTEMCONFIG *sysconfig, const char* filename)
 DataWriter::DataWriter(TrackSYSCONFIG *sysconfig, const char* filename)
 {
 
 	//record current date/time
 	time_t current_time = time(0);
 	tm* ltm = localtime(&current_time);
-	stringstream ss1,ss2, ss3;
+	stringstream ss1, ss2, ss3;
 	
 	ss1 << setw(4) << setfill('0') << ltm->tm_year + 1900;
 	ss1 << setw(2) << setfill('0') << ltm->tm_mon + 1;
 	ss1 << setw(2) << setfill('0') << ltm->tm_mday;
-	//ss << "_";
 	
 	ss2 << setw(2) << setfill('0') << ltm->tm_hour;
 	ss2 << setw(2) << setfill('0') << ltm->tm_min;
@@ -52,7 +50,6 @@ DataWriter::DataWriter(TrackSYSCONFIG *sysconfig, const char* filename)
 		//write bird config parameters of interest
 		file << "Tracker: " << (sysconfig->trackType ? "TrakStar" : "FOB") << endl;
 		file << "Number_of_Birds " << sysconfig->BirdCount << endl;
-		//file << "Sampling_Rate " << sysconfig->dMeasurementRate << endl;
 		file << "Sampling_Rate " << sysconfig->measureRate << endl;
 		file << "Report_Rate " << sysconfig->reportRate << endl;
 
@@ -79,11 +76,6 @@ DataWriter::DataWriter(TrackSYSCONFIG *sysconfig, const char* filename)
 		file << "-----" << endl;  //flag designator for finding start of the data stream.  everything above is header
 
 	}
-}
-
-DataWriter::DataWriter()
-{
-	//file.open("Test", ios::out);
 }
 
 DataWriter::~DataWriter()

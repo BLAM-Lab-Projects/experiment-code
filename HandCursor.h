@@ -21,17 +21,13 @@ private:
 	GLfloat xvel;
 	GLfloat yvel;
 
-	//GLfloat xScr;  //we will access the underlying Circle's position properties for this information.
-	//GLfloat yScr;
 	GLfloat x0;  //this is the defined origin for any rotations or gain changes of the cursor
 	GLfloat y0;
 
 	GLfloat xgain; 
 	GLfloat ygain;
 
-	//GLint draw; // controls whether cursor will be drawn or not -- we will set the underlying Circle properties
 	GLfloat rotMat[4]; //rotation matrix
-	//GLfloat color[3];  
 	Circle* circ;  //this is the underlying Circle for the cursor
 
 	GLfloat hitMargin;

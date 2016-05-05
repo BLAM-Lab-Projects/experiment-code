@@ -8,24 +8,20 @@
 // Data type used to return input data
 struct TrackDATAFRAME
 {
-	
-	//int Ninput;
-	int ValidInput;	//[BIRDCOUNT+1];
+	int ValidInput;	
 
-	double x;		//[BIRDCOUNT+1];
-	double y;		//[BIRDCOUNT+1];
-	double z;		//[BIRDCOUNT+1];
-	//double azimuth[BIRDCOUNT+1];
-	//double elevation[BIRDCOUNT+1];
-	//double roll[BIRDCOUNT+1];
-	double anglematrix[3][3]; //[BIRDCOUNT+1]
+	double x;		
+	double y;		
+	double z;		
+
+	double anglematrix[3][3]; 
 	double theta;
 
-	double time;	//[BIRDCOUNT+1];  //this is time according to the tracking system, arbitrary according to the system clock
-	double etime;	//[BIRDCOUNT+1];  //this is elapsed time from the start of data recording
-	double quality;	//[BIRDCOUNT+1];
+	double time;	//this is time according to the tracking system, arbitrary according to the system clock
+	double etime;	//this is elapsed time from the start of data recording
+	double quality;	
 
-	float vel;		//[BIRDCOUNT+1];
+	float vel;
 
 };
 
