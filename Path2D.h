@@ -40,7 +40,7 @@ public:
 	bool OnPath(Object2D* cursor,GLfloat pathx, GLfloat pathy);
 	bool OnPath(HandCursor* cursor,GLfloat pathx, GLfloat pathy);
 	bool OnPath(float xcurs, float ycurs, GLfloat pathx, GLfloat pathy);
-	bool PathCollision(Object2D* cursor,GLfloat pathx, GLfloat pathy,Object2D* LastCursorPos)
+	bool PathCollision(Object2D* cursor,GLfloat pathx, GLfloat pathy,Object2D* LastCursorPos);
 	int HitViaPts(Object2D* cursor,GLfloat pathx, GLfloat pathy, GLfloat dist);
 	int HitViaPts(HandCursor* cursor,GLfloat pathx, GLfloat pathy, GLfloat dist);
 	int HitViaPts(float xcurs, float ycurs, GLfloat pathx, GLfloat pathy, GLfloat dist);
