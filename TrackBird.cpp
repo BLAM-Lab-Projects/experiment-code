@@ -153,19 +153,30 @@ int TrackBird::InitializeBird(TrackSYSCONFIG *sysconfig)
 
 		GetBIRDSystemConfiguration(&trakSysConfig);
 
-		/*
+		
 		//this only applies for STREAM, not for Asynchronous sampling as we are doing
+		WORD reportrate = 0x03;
 		errorCode = SetSystemParameter(REPORT_RATE, &reportrate, sizeof(reportrate));
+		/*
 		if(errorCode != BIRD_ERROR_SUCCESS)
-		errorHandler(errorCode);
+		{	
+			char errBuf[1024];
+			char *pErrBuf = &errBuf[0];
+			GetErrorText(errorCode,pErrBuf,sizeof(errBuf),SIMPLE_MESSAGE);
+			std::cerr << "trakSTAR ReportRate Error: " << errBuff << std::endl;
+		}
 		else
-		GetSystemParameter(REPORT_RATE, &reportrate, sizeof(reportrate));
 		*/
+		GetSystemParameter(REPORT_RATE, &reportrate, sizeof(reportrate));
+		std::cerr << "trakSTAR Report Rate: " << std::hex << reportrate << std::dec << std::endl;
+
 
 		//set up sensors (and set filtering parameters)
 		for (i = 0; i<trakSysConfig.numberSensors; i++)
 		{
 			errorCode = GetSensorConfiguration(i, &pSensor[i]);
+
+			errorCode = SetSensorParameter(i, DATA_FORMAT, &sysconfig->datatype, sizeof(sysconfig->datatype));
 
 			//if(errorCode!=BIRD_ERROR_SUCCESS) errorHandler(errorCode);
 			if(pSensor[i].attached)
@@ -204,7 +215,6 @@ int TrackBird::InitializeBird(TrackSYSCONFIG *sysconfig)
 														<< sysconfig->alpha_parameters.alphaOn << " "
 													    <<std::endl;
 
-				errorCode = SetSensorParameter(i, DATA_FORMAT, &sysconfig->datatype, sizeof(sysconfig->datatype));
 			}
 			else
 				sysconfig->SensorIDs[i + 1] = 5000;
@@ -285,7 +295,11 @@ int TrackBird::GetUpdatedSample(TrackSYSCONFIG *sysconfig, TrackDATAFRAME DataBi
 				if (birds_start == 0)
 					birds_start = frame.dwTime/1000.0f;
 
-
+				//Note, the way that the tracker is mounted requires a change of coordinate frames.  
+				//Tracker X = data Z
+				//Tracker Y = data X
+				//Tracker Z = data Y
+				//For angle, we will record just the angle matrix rather than the azimuth/elevation/roll, to avoid the reference-frame rotation problem
 				DataBirdFrame[j].time = double(frame.dwTime)/1000.0f;  //convert time in msec to time in sec.
 				DataBirdFrame[j].etime = double(frame.dwTime)-birds_start;
 				DataBirdFrame[j].x = bird_data.position.nY;
@@ -329,7 +343,7 @@ int TrackBird::GetUpdatedSample(TrackSYSCONFIG *sysconfig, TrackDATAFRAME DataBi
 				DataBirdFrame[j].x += CALxOFFSET;
 				DataBirdFrame[j].y += CALyOFFSET;
 
-				//rotations: note, for now, these are uncalibrated! See AW for calibration data.
+				//rotations: note, for now, these have NOT been transformed into the appropriate coordinate frame.
 
 				for (k = 0; k < 3; k++)  //record the angle matrix
 					for (m = 0; m < 3; m++)
@@ -344,10 +358,13 @@ int TrackBird::GetUpdatedSample(TrackSYSCONFIG *sysconfig, TrackDATAFRAME DataBi
 	}
 	else  //trakSTAR system, poll for sample
 	{
-		DOUBLE_POSITION_MATRIX_TIME_Q_RECORD bird_data;
+		DOUBLE_POSITION_MATRIX_TIME_Q_RECORD bird_data[4], *pbird_data = &bird_data[0];
 		int errorCode;
 		
-		//the first SensorID is the mouse, so we look for valid bird sensor IDs which start at array position 1.
+		//We request data from all four sensors (available and disconnected) to be returned. We can do this synchronously using the REPORT_RATE value, or asychronously.
+		errorCode = GetAsynchronousRecord(ALL_SENSORS, pbird_data, sizeof(bird_data[0])*4);
+		//errorCode = GetSynchronousRecord(ALL_SENSORS, pbird_data, sizeof(bird_data[0])*4);
+
 		for (j = 1; j <= sysconfig->BirdCount; j++)
 		{
 
@@ -357,11 +374,11 @@ int TrackBird::GetUpdatedSample(TrackSYSCONFIG *sysconfig, TrackDATAFRAME DataBi
 				continue;
 			}
 
-			errorCode = GetAsynchronousRecord(sysconfig->SensorIDs[j], &bird_data, sizeof(bird_data));
-			if (bird_data.time != DataBirdFrame[j].time)  //if this is a new sample, save it -- based on the time stamp. if the time stamp is a funcion-call time and not a sample time we will get repeated records
+			//errorCode = GetAsynchronousRecord(sysconfig->SensorIDs[j], &bird_data, sizeof(bird_data));
+			if (fabs(bird_data[j-1].time - DataBirdFrame[j].time) > 1e-4 )  //if this is a new sample, save it -- based on the time stamp. note, the danger is that some trackers may be updated and others not, depending on the timing of these calls
 			{
 				if (birds_start == 0)
-					birds_start = bird_data.time;
+					birds_start = bird_data[j-1].time;
 
 				UpdatedSamples[j] = true;
 				DataBirdFrame[j].ValidInput = 1;
@@ -372,25 +389,23 @@ int TrackBird::GetUpdatedSample(TrackSYSCONFIG *sysconfig, TrackDATAFRAME DataBi
 				//Tracker X = data Z
 				//Tracker Y = data X
 				//Tracker Z = data Y
-				//Tracker Aximuth (rotation from XZ plane) = data elevation?
-				//Tracker Elevation (rotation from XY plane)= data azimuth?
-				//Tracker Roll (rotation from about Z axis)= data roll?
-				DataBirdFrame[j].time = bird_data.time;
-				DataBirdFrame[j].etime = bird_data.time-birds_start;
-				DataBirdFrame[j].x = bird_data.y;
-				DataBirdFrame[j].y = -bird_data.z;  //note, for the minireach setup this sign must be inverted since the transmitter is flipped.
-				DataBirdFrame[j].z = bird_data.x;
+				//For angle, we will record just the angle matrix rather than the azimuth/elevation/roll, to avoid the reference-frame rotation problem
+				DataBirdFrame[j].time = bird_data[j-1].time;
+				DataBirdFrame[j].etime = bird_data[j-1].time-birds_start;
+				DataBirdFrame[j].x = bird_data[j-1].y;
+				DataBirdFrame[j].y = -bird_data[j-1].z;  //note, for the minireach setup this sign must be inverted since the transmitter is flipped.
+				DataBirdFrame[j].z = bird_data[j-1].x;
 
 				for (k = 0; k < 3; k++)  //record the angle matrix
 					for (m = 0; m < 3; m++)
 					{
-						DataBirdFrame[j].anglematrix[k][m] = bird_data.s[k][m];
+						DataBirdFrame[j].anglematrix[k][m] = bird_data[j-1].s[k][m];
 					}
 
-				DataBirdFrame[j].quality = bird_data.quality;
+				DataBirdFrame[j].quality = bird_data[j-1].quality;
 
 				/*calibrate the data.  
-				 *  For trakSTAR, the data already arrives calibrated in mm (cm?), so we just have to convert to meters.
+				 *  For trakSTAR, the data already arrives calibrated in mm, so we just have to convert to meters.
 				 *  The orientations are provided in degrees, so we have to convert to radians by multiplying by atan(1) * 4 / 180. 
 				 *  where we use atan(1)*4 to get to pi radians (or, 180 deg).
 				 *  
@@ -416,7 +431,7 @@ int TrackBird::GetUpdatedSample(TrackSYSCONFIG *sysconfig, TrackDATAFRAME DataBi
 				DataBirdFrame[j].x += CALxOFFSET;
 				DataBirdFrame[j].y += CALyOFFSET;
 
-				//rotations: note, for now, these are uncalibrated! See AW for calibration data.
+				//rotations: note, for now, the rotation matrix remains uncalibrated.
 			}
 		}
 
