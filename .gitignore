@@ -2,3 +2,4 @@ Debug/
 ipch/
 main_*
 Data/
+*.dat
