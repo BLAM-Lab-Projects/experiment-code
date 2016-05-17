@@ -3,3 +3,5 @@ ipch/
 main_*
 Data/
 *.dat
+*.sdf
+*.suo
