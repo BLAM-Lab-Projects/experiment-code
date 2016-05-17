@@ -18,7 +18,8 @@ int TrackBird::InitializeBird(TrackSYSCONFIG *sysconfig)
 
 	//initialize general constants
 	sysconfig->measureRate = SAMPRATE;
-	sysconfig->BirdCount = BIRDCOUNT;
+	sysconfig->reportRate = REPORTRATE;
+	sysconfig->birdCount = BIRDCOUNT;
 	sysconfig->trackType = TRACKTYPE;
 	sysconfig->filter_wide = FILTER_WIDE;
 	sysconfig->filter_narrow = FILTER_NARROW;
@@ -35,7 +36,7 @@ int TrackBird::InitializeBird(TrackSYSCONFIG *sysconfig)
 	if (sysconfig->trackType == 0)
 	{
 		//initialize constants
-		sysconfig->GroupID = 1;
+		sysconfig->groupID = 1;
 		
 		//these need to match the ports that Windows has detected (see notes, AW for how to set up)
 		sysconfig->SensorIDs[1] = 5;
@@ -49,25 +50,25 @@ int TrackBird::InitializeBird(TrackSYSCONFIG *sysconfig)
 		BYTE fob_filter_dc = 0x01;
 		BYTE fob_filter_all = 0x00;  //all bits except the last three should be set to zero
 
-		if (birdRS232WakeUp(sysconfig->GroupID, FALSE, sysconfig->BirdCount, sysconfig->SensorIDs, 115200,
+		if (birdRS232WakeUp(sysconfig->groupID, FALSE, sysconfig->birdCount, sysconfig->SensorIDs, 115200,
 			FOB_READ_TIMEOUT, FOB_WRITE_TIMEOUT, GMS_GROUP_MODE_NEVER))
 		{
 
 			std::cerr << "FOB System Initialized." << std::endl;
 
 			//set up system configuration - must do this BEFORE starting to stream
-			birdGetSystemConfig(sysconfig->GroupID, &fob_sysconfig); //get defaults
+			birdGetSystemConfig(sysconfig->groupID, &fob_sysconfig); //get defaults
 			fob_sysconfig.dMeasurementRate = sysconfig->measureRate;  //edit sampling rate
-			temp = birdSetSystemConfig(sysconfig->GroupID, &fob_sysconfig); //set sampling rate
-			birdGetSystemConfig(sysconfig->GroupID, &fob_sysconfig); //re-update saved values
+			temp = birdSetSystemConfig(sysconfig->groupID, &fob_sysconfig); //set sampling rate
+			birdGetSystemConfig(sysconfig->groupID, &fob_sysconfig); //re-update saved values
 			sysconfig->measureRate = fob_sysconfig.dMeasurementRate;
 			std::cerr << "FOB Sampling Rate: " << sysconfig->measureRate << std::endl;
 			
-			for (int i = 1; i <= sysconfig->BirdCount; i++)
+			for (int i = 1; i <= sysconfig->birdCount; i++)
 			{
 				//shut down the filtering on all channels
 				BIRDDEVICECONFIG pdevcfg;
-				birdGetDeviceConfig(sysconfig->GroupID, i, &pdevcfg);  //may have to do this for each bird,which should be devices 1 through 4.
+				birdGetDeviceConfig(sysconfig->groupID, i, &pdevcfg);  //may have to do this for each bird,which should be devices 1 through 4.
 				std::cerr << "Pre ConfigSetup B" << i << ": " << std::hex << int(pdevcfg.bySetup) << std::dec;		
 
 				if (sysconfig->filter_wide)
@@ -83,15 +84,15 @@ int TrackBird::InitializeBird(TrackSYSCONFIG *sysconfig)
 
 				pdevcfg.bySetup = (pdevcfg.bySetup & 0x00) | fob_filter_all;  //set the last three bits to be zero, which should turn off all the filters (and with 0x00). then, set filtering back on (set to one) as specified
 				pdevcfg.byDataFormat = BDF_POSITIONMATRIX;
-				birdSetDeviceConfig(sysconfig->GroupID, i, &pdevcfg);
-				birdGetDeviceConfig(sysconfig->GroupID, i, &pdevcfg);
+				birdSetDeviceConfig(sysconfig->groupID, i, &pdevcfg);
+				birdGetDeviceConfig(sysconfig->groupID, i, &pdevcfg);
 				std::cerr << "Pst ConfigSetup B" << i << ": " << std::hex << int(pdevcfg.bySetup) << std::dec << std::endl;
 			}
 
-			if (birdStartFrameStream(sysconfig->GroupID))  //run in streaming mode
+			if (birdStartFrameStream(sysconfig->groupID))  //run in streaming mode
 				return 1;
 			else
-				birdShutDown(sysconfig->GroupID);
+				birdShutDown(sysconfig->groupID);
 
 		} // end wakeup birds
 		else
@@ -155,8 +156,8 @@ int TrackBird::InitializeBird(TrackSYSCONFIG *sysconfig)
 
 		
 		//this only applies for STREAM, not for Asynchronous sampling as we are doing
-		WORD reportrate = 0x03;
-		errorCode = SetSystemParameter(REPORT_RATE, &reportrate, sizeof(reportrate));
+		//WORD reportrate = 0x03;
+		errorCode = SetSystemParameter(REPORT_RATE, &sysconfig->reportRate, sizeof(sysconfig->reportRate));
 		/*
 		if(errorCode != BIRD_ERROR_SUCCESS)
 		{	
@@ -167,8 +168,8 @@ int TrackBird::InitializeBird(TrackSYSCONFIG *sysconfig)
 		}
 		else
 		*/
-		GetSystemParameter(REPORT_RATE, &reportrate, sizeof(reportrate));
-		std::cerr << "trakSTAR Report Rate: " << std::hex << reportrate << std::dec << std::endl;
+		GetSystemParameter(REPORT_RATE, &sysconfig->reportRate, sizeof(sysconfig->reportRate));
+		std::cerr << "trakSTAR Report Rate: " << std::hex << sysconfig->reportRate << std::dec << std::endl;
 
 
 		//set up sensors (and set filtering parameters)
@@ -194,9 +195,12 @@ int TrackBird::InitializeBird(TrackSYSCONFIG *sysconfig)
 																 << sysconfigstatus.filter_dc << " " 
 																 << sysconfig->alpha_parameters.alphaOn << " "
 																 <<std::endl;
-
+				
+				//if the adaptive DC filter is set to zero, the alphaOn parameter must also be turned off to fully shut off the filter.
 				if (sysconfig->filter_dc <= 0.0f)
 					sysconfig->alpha_parameters.alphaOn = false;
+				else
+					sysconfig->alpha_parameters.alphaOn = true;
 
 				//set status of all the filters
 				errorCode = SetSensorParameter(i, FILTER_AC_WIDE_NOTCH,&sysconfig->filter_wide, sizeof(sysconfig->filter_wide));
@@ -220,10 +224,10 @@ int TrackBird::InitializeBird(TrackSYSCONFIG *sysconfig)
 				sysconfig->SensorIDs[i + 1] = 5000;
 
 		}//end for setup sensors
-		sysconfig->NBirdsActive = NSensors;
+		sysconfig->nBirdsActive = NSensors;
 
-		std::cerr << "Sensors Active: (" << sysconfig->NBirdsActive << ":"
-										 << sysconfig->BirdCount << ") "
+		std::cerr << "Sensors Active: (" << sysconfig->nBirdsActive << ":"
+										 << sysconfig->birdCount << ") "
 										 << sysconfig->SensorIDs[0] << " "
 										 << sysconfig->SensorIDs[1] << " "
 										 << sysconfig->SensorIDs[2] << " "
@@ -275,11 +279,11 @@ int TrackBird::GetUpdatedSample(TrackSYSCONFIG *sysconfig, TrackDATAFRAME DataBi
 		BIRDFRAME frame;
 		BIRDREADING bird_data;
 
-		if (birdFrameReady(sysconfig->GroupID))  //poll to see if a sample is available.  note, all the sensors get updated at the same time.
+		if (birdFrameReady(sysconfig->groupID))  //poll to see if a sample is available.  note, all the sensors get updated at the same time.
 		{
-			birdGetFrame(sysconfig->GroupID, &frame);
+			birdGetFrame(sysconfig->groupID, &frame);
 
-			for (j = 1; j <= sysconfig->BirdCount; j++)
+			for (j = 1; j <= sysconfig->birdCount; j++)
 			{
 				if (sysconfig->SensorIDs[j] > 1000)
 				{
@@ -365,7 +369,7 @@ int TrackBird::GetUpdatedSample(TrackSYSCONFIG *sysconfig, TrackDATAFRAME DataBi
 		errorCode = GetAsynchronousRecord(ALL_SENSORS, pbird_data, sizeof(bird_data[0])*4);
 		//errorCode = GetSynchronousRecord(ALL_SENSORS, pbird_data, sizeof(bird_data[0])*4);
 
-		for (j = 1; j <= sysconfig->BirdCount; j++)
+		for (j = 1; j <= sysconfig->birdCount; j++)
 		{
 
 			if (sysconfig->SensorIDs[j] > 1000)
@@ -452,8 +456,8 @@ bool TrackBird::ShutDownBird(TrackSYSCONFIG *sysconfig)
 	//FOB system
 	if (sysconfig->trackType == 0)
 	{
-		birdStopFrameStream(sysconfig->GroupID);  //stop streaming data frames
-		birdShutDown(sysconfig->GroupID);
+		birdStopFrameStream(sysconfig->groupID);  //stop streaming data frames
+		birdShutDown(sysconfig->groupID);
 
 	}
 	else  //trakSTAR system
