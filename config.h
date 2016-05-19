@@ -39,8 +39,10 @@
 //TRACKTYPE: type of tracker being used: FOB (0) or trakStar (1)
 #define TRACKTYPE 0
 #define BIRDCOUNT 4
-//SAMPRATE: sampling rate (for 1 full measurement cycle, or time to activate all 3 axes.  for trakSTAR, we get samples updated at SAMPRATE/3 frequency.
+//SAMPRATE: sampling rate (for 1 full measurement cycle, or time to activate all 3 axes.  for trakSTAR, we get samples returned at SAMPRATE*3 frequency.
 #define SAMPRATE 130
+//1 out of every REPORTRATE samples will be acquired from the trakSTAR, when in Synchronous mode
+#define REPORTRATE 1
 #define FILTER_WIDE false
 #define FILTER_NARROW false
 #define FILTER_DC 0.0f
