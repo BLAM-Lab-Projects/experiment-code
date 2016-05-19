@@ -155,8 +155,7 @@ int TrackBird::InitializeBird(TrackSYSCONFIG *sysconfig)
 		GetBIRDSystemConfiguration(&trakSysConfig);
 
 		
-		//this only applies for STREAM, not for Asynchronous sampling as we are doing
-		//WORD reportrate = 0x03;
+		//this only applies for STREAM, not for Asynchronous sampling; one out of every reportRate samples is returned
 		errorCode = SetSystemParameter(REPORT_RATE, &sysconfig->reportRate, sizeof(sysconfig->reportRate));
 		/*
 		if(errorCode != BIRD_ERROR_SUCCESS)
@@ -366,8 +365,13 @@ int TrackBird::GetUpdatedSample(TrackSYSCONFIG *sysconfig, TrackDATAFRAME DataBi
 		int errorCode;
 		
 		//We request data from all four sensors (available and disconnected) to be returned. We can do this synchronously using the REPORT_RATE value, or asychronously.
-		errorCode = GetAsynchronousRecord(ALL_SENSORS, pbird_data, sizeof(bird_data[0])*4);
-		//errorCode = GetSynchronousRecord(ALL_SENSORS, pbird_data, sizeof(bird_data[0])*4);
+		//We will use the REPORTRATE value as a flag to indicate whether to use synchronous or asynchronous data requests. Note that if you stream synchronously and 
+		//  samples are returned faster than they can be read, it is unclear if you will pull the most recent sample or an older, buffered one with this call. 
+		//  Alternatively, using asynchronous recording means you always get the most updated sample, but you might occasionally drop samples if they are returned too rapidly
+		if (REPORTRATE > 1)
+			errorCode = GetSynchronousRecord(ALL_SENSORS, pbird_data, sizeof(bird_data[0])*4);
+		else
+			errorCode = GetAsynchronousRecord(ALL_SENSORS, pbird_data, sizeof(bird_data[0])*4);
 
 		for (j = 1; j <= sysconfig->birdCount; j++)
 		{
