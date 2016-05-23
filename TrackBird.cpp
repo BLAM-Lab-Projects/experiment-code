@@ -18,7 +18,8 @@ int TrackBird::InitializeBird(TrackSYSCONFIG *sysconfig)
 
 	//initialize general constants
 	sysconfig->measureRate = SAMPRATE;
-	sysconfig->BirdCount = BIRDCOUNT;
+	sysconfig->reportRate = REPORTRATE;
+	sysconfig->birdCount = BIRDCOUNT;
 	sysconfig->trackType = TRACKTYPE;
 	sysconfig->filter_wide = FILTER_WIDE;
 	sysconfig->filter_narrow = FILTER_NARROW;
@@ -35,7 +36,7 @@ int TrackBird::InitializeBird(TrackSYSCONFIG *sysconfig)
 	if (sysconfig->trackType == 0)
 	{
 		//initialize constants
-		sysconfig->GroupID = 1;
+		sysconfig->groupID = 1;
 		
 		//these need to match the ports that Windows has detected (see notes, AW for how to set up)
 		sysconfig->SensorIDs[1] = 5;
@@ -49,25 +50,25 @@ int TrackBird::InitializeBird(TrackSYSCONFIG *sysconfig)
 		BYTE fob_filter_dc = 0x01;
 		BYTE fob_filter_all = 0x00;  //all bits except the last three should be set to zero
 
-		if (birdRS232WakeUp(sysconfig->GroupID, FALSE, sysconfig->BirdCount, sysconfig->SensorIDs, 115200,
+		if (birdRS232WakeUp(sysconfig->groupID, FALSE, sysconfig->birdCount, sysconfig->SensorIDs, 115200,
 			FOB_READ_TIMEOUT, FOB_WRITE_TIMEOUT, GMS_GROUP_MODE_NEVER))
 		{
 
 			std::cerr << "FOB System Initialized." << std::endl;
 
 			//set up system configuration - must do this BEFORE starting to stream
-			birdGetSystemConfig(sysconfig->GroupID, &fob_sysconfig); //get defaults
+			birdGetSystemConfig(sysconfig->groupID, &fob_sysconfig); //get defaults
 			fob_sysconfig.dMeasurementRate = sysconfig->measureRate;  //edit sampling rate
-			temp = birdSetSystemConfig(sysconfig->GroupID, &fob_sysconfig); //set sampling rate
-			birdGetSystemConfig(sysconfig->GroupID, &fob_sysconfig); //re-update saved values
+			temp = birdSetSystemConfig(sysconfig->groupID, &fob_sysconfig); //set sampling rate
+			birdGetSystemConfig(sysconfig->groupID, &fob_sysconfig); //re-update saved values
 			sysconfig->measureRate = fob_sysconfig.dMeasurementRate;
 			std::cerr << "FOB Sampling Rate: " << sysconfig->measureRate << std::endl;
 			
-			for (int i = 1; i <= sysconfig->BirdCount; i++)
+			for (int i = 1; i <= sysconfig->birdCount; i++)
 			{
 				//shut down the filtering on all channels
 				BIRDDEVICECONFIG pdevcfg;
-				birdGetDeviceConfig(sysconfig->GroupID, i, &pdevcfg);  //may have to do this for each bird,which should be devices 1 through 4.
+				birdGetDeviceConfig(sysconfig->groupID, i, &pdevcfg);  //may have to do this for each bird,which should be devices 1 through 4.
 				std::cerr << "Pre ConfigSetup B" << i << ": " << std::hex << int(pdevcfg.bySetup) << std::dec;		
 
 				if (sysconfig->filter_wide)
@@ -83,15 +84,15 @@ int TrackBird::InitializeBird(TrackSYSCONFIG *sysconfig)
 
 				pdevcfg.bySetup = (pdevcfg.bySetup & 0x00) | fob_filter_all;  //set the last three bits to be zero, which should turn off all the filters (and with 0x00). then, set filtering back on (set to one) as specified
 				pdevcfg.byDataFormat = BDF_POSITIONMATRIX;
-				birdSetDeviceConfig(sysconfig->GroupID, i, &pdevcfg);
-				birdGetDeviceConfig(sysconfig->GroupID, i, &pdevcfg);
+				birdSetDeviceConfig(sysconfig->groupID, i, &pdevcfg);
+				birdGetDeviceConfig(sysconfig->groupID, i, &pdevcfg);
 				std::cerr << "Pst ConfigSetup B" << i << ": " << std::hex << int(pdevcfg.bySetup) << std::dec << std::endl;
 			}
 
-			if (birdStartFrameStream(sysconfig->GroupID))  //run in streaming mode
+			if (birdStartFrameStream(sysconfig->groupID))  //run in streaming mode
 				return 1;
 			else
-				birdShutDown(sysconfig->GroupID);
+				birdShutDown(sysconfig->groupID);
 
 		} // end wakeup birds
 		else
@@ -153,19 +154,29 @@ int TrackBird::InitializeBird(TrackSYSCONFIG *sysconfig)
 
 		GetBIRDSystemConfiguration(&trakSysConfig);
 
+		
+		//this only applies for STREAM, not for Asynchronous sampling; one out of every reportRate samples is returned
+		errorCode = SetSystemParameter(REPORT_RATE, &sysconfig->reportRate, sizeof(sysconfig->reportRate));
 		/*
-		//this only applies for STREAM, not for Asynchronous sampling as we are doing
-		errorCode = SetSystemParameter(REPORT_RATE, &reportrate, sizeof(reportrate));
 		if(errorCode != BIRD_ERROR_SUCCESS)
-		errorHandler(errorCode);
+		{	
+			char errBuf[1024];
+			char *pErrBuf = &errBuf[0];
+			GetErrorText(errorCode,pErrBuf,sizeof(errBuf),SIMPLE_MESSAGE);
+			std::cerr << "trakSTAR ReportRate Error: " << errBuff << std::endl;
+		}
 		else
-		GetSystemParameter(REPORT_RATE, &reportrate, sizeof(reportrate));
 		*/
+		GetSystemParameter(REPORT_RATE, &sysconfig->reportRate, sizeof(sysconfig->reportRate));
+		std::cerr << "trakSTAR Report Rate: " << std::hex << sysconfig->reportRate << std::dec << std::endl;
+
 
 		//set up sensors (and set filtering parameters)
 		for (i = 0; i<trakSysConfig.numberSensors; i++)
 		{
 			errorCode = GetSensorConfiguration(i, &pSensor[i]);
+
+			errorCode = SetSensorParameter(i, DATA_FORMAT, &sysconfig->datatype, sizeof(sysconfig->datatype));
 
 			//if(errorCode!=BIRD_ERROR_SUCCESS) errorHandler(errorCode);
 			if(pSensor[i].attached)
@@ -183,9 +194,12 @@ int TrackBird::InitializeBird(TrackSYSCONFIG *sysconfig)
 																 << sysconfigstatus.filter_dc << " " 
 																 << sysconfig->alpha_parameters.alphaOn << " "
 																 <<std::endl;
-
+				
+				//if the adaptive DC filter is set to zero, the alphaOn parameter must also be turned off to fully shut off the filter.
 				if (sysconfig->filter_dc <= 0.0f)
 					sysconfig->alpha_parameters.alphaOn = false;
+				else
+					sysconfig->alpha_parameters.alphaOn = true;
 
 				//set status of all the filters
 				errorCode = SetSensorParameter(i, FILTER_AC_WIDE_NOTCH,&sysconfig->filter_wide, sizeof(sysconfig->filter_wide));
@@ -204,16 +218,15 @@ int TrackBird::InitializeBird(TrackSYSCONFIG *sysconfig)
 														<< sysconfig->alpha_parameters.alphaOn << " "
 													    <<std::endl;
 
-				errorCode = SetSensorParameter(i, DATA_FORMAT, &sysconfig->datatype, sizeof(sysconfig->datatype));
 			}
 			else
 				sysconfig->SensorIDs[i + 1] = 5000;
 
 		}//end for setup sensors
-		sysconfig->NBirdsActive = NSensors;
+		sysconfig->nBirdsActive = NSensors;
 
-		std::cerr << "Sensors Active: (" << sysconfig->NBirdsActive << ":"
-										 << sysconfig->BirdCount << ") "
+		std::cerr << "Sensors Active: (" << sysconfig->nBirdsActive << ":"
+										 << sysconfig->birdCount << ") "
 										 << sysconfig->SensorIDs[0] << " "
 										 << sysconfig->SensorIDs[1] << " "
 										 << sysconfig->SensorIDs[2] << " "
@@ -265,11 +278,11 @@ int TrackBird::GetUpdatedSample(TrackSYSCONFIG *sysconfig, TrackDATAFRAME DataBi
 		BIRDFRAME frame;
 		BIRDREADING bird_data;
 
-		if (birdFrameReady(sysconfig->GroupID))  //poll to see if a sample is available.  note, all the sensors get updated at the same time.
+		if (birdFrameReady(sysconfig->groupID))  //poll to see if a sample is available.  note, all the sensors get updated at the same time.
 		{
-			birdGetFrame(sysconfig->GroupID, &frame);
+			birdGetFrame(sysconfig->groupID, &frame);
 
-			for (j = 1; j <= sysconfig->BirdCount; j++)
+			for (j = 1; j <= sysconfig->birdCount; j++)
 			{
 				if (sysconfig->SensorIDs[j] > 1000)
 				{
@@ -285,7 +298,11 @@ int TrackBird::GetUpdatedSample(TrackSYSCONFIG *sysconfig, TrackDATAFRAME DataBi
 				if (birds_start == 0)
 					birds_start = frame.dwTime/1000.0f;
 
-
+				//Note, the way that the tracker is mounted requires a change of coordinate frames.  
+				//Tracker X = data Z
+				//Tracker Y = data X
+				//Tracker Z = data Y
+				//For angle, we will record just the angle matrix rather than the azimuth/elevation/roll, to avoid the reference-frame rotation problem
 				DataBirdFrame[j].time = double(frame.dwTime)/1000.0f;  //convert time in msec to time in sec.
 				DataBirdFrame[j].etime = double(frame.dwTime)-birds_start;
 				DataBirdFrame[j].x = bird_data.position.nY;
@@ -329,7 +346,7 @@ int TrackBird::GetUpdatedSample(TrackSYSCONFIG *sysconfig, TrackDATAFRAME DataBi
 				DataBirdFrame[j].x += CALxOFFSET;
 				DataBirdFrame[j].y += CALyOFFSET;
 
-				//rotations: note, for now, these are uncalibrated! See AW for calibration data.
+				//rotations: note, for now, these have NOT been transformed into the appropriate coordinate frame.
 
 				for (k = 0; k < 3; k++)  //record the angle matrix
 					for (m = 0; m < 3; m++)
@@ -344,11 +361,19 @@ int TrackBird::GetUpdatedSample(TrackSYSCONFIG *sysconfig, TrackDATAFRAME DataBi
 	}
 	else  //trakSTAR system, poll for sample
 	{
-		DOUBLE_POSITION_MATRIX_TIME_Q_RECORD bird_data;
+		DOUBLE_POSITION_MATRIX_TIME_Q_RECORD bird_data[4], *pbird_data = &bird_data[0];
 		int errorCode;
 		
-		//the first SensorID is the mouse, so we look for valid bird sensor IDs which start at array position 1.
-		for (j = 1; j <= sysconfig->BirdCount; j++)
+		//We request data from all four sensors (available and disconnected) to be returned. We can do this synchronously using the REPORT_RATE value, or asychronously.
+		//We will use the REPORTRATE value as a flag to indicate whether to use synchronous or asynchronous data requests. Note that if you stream synchronously and 
+		//  samples are returned faster than they can be read, it is unclear if you will pull the most recent sample or an older, buffered one with this call. 
+		//  Alternatively, using asynchronous recording means you always get the most updated sample, but you might occasionally drop samples if they are returned too rapidly
+		if (REPORTRATE > 1)
+			errorCode = GetSynchronousRecord(ALL_SENSORS, pbird_data, sizeof(bird_data[0])*4);
+		else
+			errorCode = GetAsynchronousRecord(ALL_SENSORS, pbird_data, sizeof(bird_data[0])*4);
+
+		for (j = 1; j <= sysconfig->birdCount; j++)
 		{
 
 			if (sysconfig->SensorIDs[j] > 1000)
@@ -357,11 +382,11 @@ int TrackBird::GetUpdatedSample(TrackSYSCONFIG *sysconfig, TrackDATAFRAME DataBi
 				continue;
 			}
 
-			errorCode = GetAsynchronousRecord(sysconfig->SensorIDs[j], &bird_data, sizeof(bird_data));
-			if (bird_data.time != DataBirdFrame[j].time)  //if this is a new sample, save it -- based on the time stamp. if the time stamp is a funcion-call time and not a sample time we will get repeated records
+			//errorCode = GetAsynchronousRecord(sysconfig->SensorIDs[j], &bird_data, sizeof(bird_data));
+			if (fabs(bird_data[j-1].time - DataBirdFrame[j].time) > 1e-4 )  //if this is a new sample, save it -- based on the time stamp. note, the danger is that some trackers may be updated and others not, depending on the timing of these calls
 			{
 				if (birds_start == 0)
-					birds_start = bird_data.time;
+					birds_start = bird_data[j-1].time;
 
 				UpdatedSamples[j] = true;
 				DataBirdFrame[j].ValidInput = 1;
@@ -372,25 +397,23 @@ int TrackBird::GetUpdatedSample(TrackSYSCONFIG *sysconfig, TrackDATAFRAME DataBi
 				//Tracker X = data Z
 				//Tracker Y = data X
 				//Tracker Z = data Y
-				//Tracker Aximuth (rotation from XZ plane) = data elevation?
-				//Tracker Elevation (rotation from XY plane)= data azimuth?
-				//Tracker Roll (rotation from about Z axis)= data roll?
-				DataBirdFrame[j].time = bird_data.time;
-				DataBirdFrame[j].etime = bird_data.time-birds_start;
-				DataBirdFrame[j].x = bird_data.y;
-				DataBirdFrame[j].y = -bird_data.z;  //note, for the minireach setup this sign must be inverted since the transmitter is flipped.
-				DataBirdFrame[j].z = bird_data.x;
+				//For angle, we will record just the angle matrix rather than the azimuth/elevation/roll, to avoid the reference-frame rotation problem
+				DataBirdFrame[j].time = bird_data[j-1].time;
+				DataBirdFrame[j].etime = bird_data[j-1].time-birds_start;
+				DataBirdFrame[j].x = bird_data[j-1].y;
+				DataBirdFrame[j].y = -bird_data[j-1].z;  //note, for the minireach setup this sign must be inverted since the transmitter is flipped.
+				DataBirdFrame[j].z = bird_data[j-1].x;
 
 				for (k = 0; k < 3; k++)  //record the angle matrix
 					for (m = 0; m < 3; m++)
 					{
-						DataBirdFrame[j].anglematrix[k][m] = bird_data.s[k][m];
+						DataBirdFrame[j].anglematrix[k][m] = bird_data[j-1].s[k][m];
 					}
 
-				DataBirdFrame[j].quality = bird_data.quality;
+				DataBirdFrame[j].quality = bird_data[j-1].quality;
 
 				/*calibrate the data.  
-				 *  For trakSTAR, the data already arrives calibrated in mm (cm?), so we just have to convert to meters.
+				 *  For trakSTAR, the data already arrives calibrated in mm, so we just have to convert to meters.
 				 *  The orientations are provided in degrees, so we have to convert to radians by multiplying by atan(1) * 4 / 180. 
 				 *  where we use atan(1)*4 to get to pi radians (or, 180 deg).
 				 *  
@@ -416,7 +439,7 @@ int TrackBird::GetUpdatedSample(TrackSYSCONFIG *sysconfig, TrackDATAFRAME DataBi
 				DataBirdFrame[j].x += CALxOFFSET;
 				DataBirdFrame[j].y += CALyOFFSET;
 
-				//rotations: note, for now, these are uncalibrated! See AW for calibration data.
+				//rotations: note, for now, the rotation matrix remains uncalibrated.
 			}
 		}
 
@@ -437,8 +460,8 @@ bool TrackBird::ShutDownBird(TrackSYSCONFIG *sysconfig)
 	//FOB system
 	if (sysconfig->trackType == 0)
 	{
-		birdStopFrameStream(sysconfig->GroupID);  //stop streaming data frames
-		birdShutDown(sysconfig->GroupID);
+		birdStopFrameStream(sysconfig->groupID);  //stop streaming data frames
+		birdShutDown(sysconfig->groupID);
 
 	}
 	else  //trakSTAR system

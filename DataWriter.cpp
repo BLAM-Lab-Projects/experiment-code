@@ -49,7 +49,7 @@ DataWriter::DataWriter(TrackSYSCONFIG *sysconfig, const char* filename)
 		
 		//write bird config parameters of interest
 		file << "Tracker: " << (sysconfig->trackType ? "TrakStar" : "FOB") << endl;
-		file << "Number_of_Birds " << sysconfig->BirdCount << endl;
+		file << "Number_of_Birds " << sysconfig->birdCount << endl;
 		file << "Sampling_Rate " << sysconfig->measureRate << endl;
 		file << "Report_Rate " << sysconfig->reportRate << endl;
 

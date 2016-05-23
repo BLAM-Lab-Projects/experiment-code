@@ -21,20 +21,20 @@ struct TrackSYSCONFIG
 	double trackType;
 	double measureRate;
 	USHORT SensorIDs[BIRDCOUNT + 1];  // for FOB these are the COM ports; for trakSTAR these are sensor numbers
-	int BirdCount;
+	int birdCount;
 	BOOL filter_wide;
 	BOOL filter_narrow;
 	double filter_dc;
 	ADAPTIVE_PARAMETERS alpha_parameters;
 
 	//FOB parameters
-	int GroupID;
+	int groupID;
 
 	//trakSTAR parameters
-	double reportRate;
+	WORD reportRate;
 	BOOL metric;
 	int datatype;
-	int NBirdsActive;
+	int nBirdsActive;
 } ;
 
 
