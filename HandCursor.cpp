@@ -53,7 +53,7 @@ void HandCursor::UpdatePos(GLfloat x, GLfloat y)
 	xpos = x;
 	ypos = y;
 
-	for (int i = (NHIST - 1); i > 0; i--)
+	for (int i = (NCHIST - 1); i > 0; i--)
 	{
 		xhist[i] = xhist[i - 1];
 		yhist[i] = yhist[i - 1];
@@ -65,13 +65,13 @@ void HandCursor::UpdatePos(GLfloat x, GLfloat y)
 	// get mean
 	GLfloat xmean = 0;
 	GLfloat ymean = 0;
-	for (int i = 0; i < NHIST; i++)
+	for (int i = 0; i < NCHIST; i++)
 	{
 		xmean += xhist[i];
 		ymean += yhist[i];
 	}
-	xmean = xmean/NHIST;
-	ymean = ymean/NHIST;
+	xmean = xmean/NCHIST;
+	ymean = ymean/NCHIST;
 	
 	// compute xvel as slope of data over last few 5 samples
 	xvel = (-2*xhist[4] -1*xhist[3] + 1*xhist[1] + 2*xhist[0])*SAMPRATE/10;
@@ -103,7 +103,7 @@ void HandCursor::UpdatePos(GLfloat x, GLfloat y)
 		yScr = ygain*(yScr - y0) + y0;
 	}
 
-	for (int i = (NHIST - 1); i > 0; i--)
+	for (int i = (NCHIST - 1); i > 0; i--)
 	{
 		xhistScr[i] = xhistScr[i - 1];
 		yhistScr[i] = yhistScr[i - 1];
@@ -122,6 +122,16 @@ GLfloat HandCursor::GetTrueX()
 GLfloat HandCursor::GetTrueY()
 {
 	return ypos;
+}
+
+GLfloat HandCursor::GetLastX()
+{
+	return xhist[1];  //xhist[0] is the current sample
+}
+
+GLfloat HandCursor::GetLastY()
+{
+	return yhist[1];  //yhist[0] is the current sample
 }
 
 void HandCursor::SetRotation(GLfloat theta)

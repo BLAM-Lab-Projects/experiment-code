@@ -39,6 +39,8 @@ Image::Image(SDL_Surface* surface, float ratio)
 	glTexImage2D(GL_TEXTURE_2D, 0, channels, surface->w, surface->h, 0, texture_format, GL_UNSIGNED_BYTE, surface->pixels);
 	width = (GLfloat)surface->w * ratio;
 	height = (GLfloat)surface->h * ratio;
+
+	drawOn = 1;
 }
 
 Image* Image::LoadFromFile(char* filePath)
@@ -78,112 +80,138 @@ void Image::Draw(GLfloat xPos, GLfloat yPos, GLfloat theta)
 
 void Image::Draw(GLfloat xPos, GLfloat yPos, GLfloat w, GLfloat h, GLfloat theta)
 {	
-	glBindTexture(GL_TEXTURE_2D, texture);
-	glEnable(GL_TEXTURE_2D);
-	
-	// Draw a quad with the texture on it
-	glBegin(GL_QUADS);
-	glTexCoord2f(0.0f, 0.0f);
-	glVertex3f(xPos - (w / 2) * cos(theta) - (h / 2) * sin(theta),
-		yPos - (w / 2) * sin(theta) + (h / 2) * cos(theta), 0.0f);
-	glTexCoord2f(1.0f, 0.0f);
-	glVertex3f(xPos + (w / 2) * cos(theta) - (h / 2) * sin(theta),
-		yPos + (w / 2) * sin(theta) + (h / 2) * cos(theta), 0.0f);
-	glTexCoord2f(1.0f, 1.0f);
-	glVertex3f(xPos + (w / 2) * cos(theta) + (h / 2) * sin(theta),
-		yPos + (w / 2) * sin(theta) - (h / 2) * cos(theta), 0.0f);
-	glTexCoord2f(0.0f, 1.0f);
-	glVertex3f(xPos - (w / 2) * cos(theta) + (h / 2) * sin(theta),
-		yPos - (w / 2) * sin(theta) - (h / 2) * cos(theta), 0.0f);
-	glEnd();
-	
-	glBindTexture(GL_TEXTURE_2D, 0);
-	glDisable(GL_TEXTURE_2D);
 
+	if (drawOn)
+	{
+
+		glBindTexture(GL_TEXTURE_2D, texture);
+		glEnable(GL_TEXTURE_2D);
+
+		// Draw a quad with the texture on it
+		glBegin(GL_QUADS);
+		glTexCoord2f(0.0f, 0.0f);
+		glVertex3f(xPos - (w / 2) * cos(theta) - (h / 2) * sin(theta),
+			yPos - (w / 2) * sin(theta) + (h / 2) * cos(theta), 0.0f);
+		glTexCoord2f(1.0f, 0.0f);
+		glVertex3f(xPos + (w / 2) * cos(theta) - (h / 2) * sin(theta),
+			yPos + (w / 2) * sin(theta) + (h / 2) * cos(theta), 0.0f);
+		glTexCoord2f(1.0f, 1.0f);
+		glVertex3f(xPos + (w / 2) * cos(theta) + (h / 2) * sin(theta),
+			yPos + (w / 2) * sin(theta) - (h / 2) * cos(theta), 0.0f);
+		glTexCoord2f(0.0f, 1.0f);
+		glVertex3f(xPos - (w / 2) * cos(theta) + (h / 2) * sin(theta),
+			yPos - (w / 2) * sin(theta) - (h / 2) * cos(theta), 0.0f);
+		glEnd();
+
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glDisable(GL_TEXTURE_2D);
+
+	}
 }
 
 
 void Image::DrawAlign(GLfloat xPos, GLfloat yPos, GLfloat w, GLfloat h, GLint cflag)
 {
-	glBindTexture(GL_TEXTURE_2D, texture);
-	glEnable(GL_TEXTURE_2D);
-	
-	if (cflag == 1)  //right-align
+	if (drawOn)
 	{
-		// Draw a quad with the texture on it
-		glBegin(GL_QUADS);
-		glTexCoord2f(0.0f, 0.0f);
-		glVertex3f(xPos - w, yPos + (h / 2), 0.0f);
-		glTexCoord2f(1.0f, 0.0f);
-		glVertex3f(xPos,     yPos + (h / 2), 0.0f);
-		glTexCoord2f(1.0f, 1.0f);
-		glVertex3f(xPos,     yPos - (h / 2), 0.0f);
-		glTexCoord2f(0.0f, 1.0f);
-		glVertex3f(xPos - w, yPos - (h / 2), 0.0f);
-		glEnd();
-	}
-	else if (cflag == 2) //top-align
-	{
-		// Draw a quad with the texture on it
-		glBegin(GL_QUADS);
-		glTexCoord2f(0.0f, 0.0f);
-		glVertex3f(xPos - (w / 2), yPos, 0.0f);
-		glTexCoord2f(1.0f, 0.0f);
-		glVertex3f(xPos + (w / 2), yPos, 0.0f);
-		glTexCoord2f(1.0f, 1.0f);
-		glVertex3f(xPos + (w / 2), yPos - h,     0.0f);
-		glTexCoord2f(0.0f, 1.0f);
-		glVertex3f(xPos - (w / 2), yPos - h,     0.0f);
-		glEnd();
+
+		glBindTexture(GL_TEXTURE_2D, texture);
+		glEnable(GL_TEXTURE_2D);
+
+		if (cflag == 1)  //right-align
+		{
+			// Draw a quad with the texture on it
+			glBegin(GL_QUADS);
+			glTexCoord2f(0.0f, 0.0f);
+			glVertex3f(xPos - w, yPos + (h / 2), 0.0f);
+			glTexCoord2f(1.0f, 0.0f);
+			glVertex3f(xPos,     yPos + (h / 2), 0.0f);
+			glTexCoord2f(1.0f, 1.0f);
+			glVertex3f(xPos,     yPos - (h / 2), 0.0f);
+			glTexCoord2f(0.0f, 1.0f);
+			glVertex3f(xPos - w, yPos - (h / 2), 0.0f);
+			glEnd();
+		}
+		else if (cflag == 2) //top-align
+		{
+			// Draw a quad with the texture on it
+			glBegin(GL_QUADS);
+			glTexCoord2f(0.0f, 0.0f);
+			glVertex3f(xPos - (w / 2), yPos, 0.0f);
+			glTexCoord2f(1.0f, 0.0f);
+			glVertex3f(xPos + (w / 2), yPos, 0.0f);
+			glTexCoord2f(1.0f, 1.0f);
+			glVertex3f(xPos + (w / 2), yPos - h,     0.0f);
+			glTexCoord2f(0.0f, 1.0f);
+			glVertex3f(xPos - (w / 2), yPos - h,     0.0f);
+			glEnd();
+
+		}
+		else if (cflag == 3) //left-align 
+		{
+
+			// Draw a quad with the texture on it
+			glBegin(GL_QUADS);
+			glTexCoord2f(0.0f, 0.0f);
+			glVertex3f(xPos,	 yPos + (h / 2), 0.0f);
+			glTexCoord2f(1.0f, 0.0f);
+			glVertex3f(xPos + w, yPos + (h / 2), 0.0f);
+			glTexCoord2f(1.0f, 1.0f);
+			glVertex3f(xPos + w, yPos - (h / 2), 0.0f);
+			glTexCoord2f(0.0f, 1.0f);
+			glVertex3f(xPos,     yPos - (h / 2), 0.0f);
+			glEnd();
+
+		}
+		else if (cflag == 4)  //bottom-align
+		{
+			// Draw a quad with the texture on it
+			glBegin(GL_QUADS);
+			glTexCoord2f(0.0f, 0.0f);
+			glVertex3f(xPos - (w / 2), yPos + h, 0.0f);
+			glTexCoord2f(1.0f, 0.0f);
+			glVertex3f(xPos + (w / 2), yPos + h, 0.0f);
+			glTexCoord2f(1.0f, 1.0f);
+			glVertex3f(xPos + (w / 2), yPos,     0.0f);
+			glTexCoord2f(0.0f, 1.0f);
+			glVertex3f(xPos - (w / 2), yPos,     0.0f);
+			glEnd();
+		}
+
+		else
+		{
+			// Draw a quad with the texture on it
+			glBegin(GL_QUADS);
+			glTexCoord2f(0.0f, 0.0f);
+			glVertex3f(xPos - (w / 2), yPos + (h / 2), 0.0f);
+			glTexCoord2f(1.0f, 0.0f);
+			glVertex3f(xPos + (w / 2), yPos + (h / 2), 0.0f);
+			glTexCoord2f(1.0f, 1.0f);
+			glVertex3f(xPos + (w / 2), yPos - (h / 2), 0.0f);
+			glTexCoord2f(0.0f, 1.0f);
+			glVertex3f(xPos - (w / 2), yPos - (h / 2), 0.0f);
+			glEnd();
+		}
+
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glDisable(GL_TEXTURE_2D);
 
 	}
-	else if (cflag == 3) //left-align 
-	{
-		
-		// Draw a quad with the texture on it
-		glBegin(GL_QUADS);
-		glTexCoord2f(0.0f, 0.0f);
-		glVertex3f(xPos,	 yPos + (h / 2), 0.0f);
-		glTexCoord2f(1.0f, 0.0f);
-		glVertex3f(xPos + w, yPos + (h / 2), 0.0f);
-		glTexCoord2f(1.0f, 1.0f);
-		glVertex3f(xPos + w, yPos - (h / 2), 0.0f);
-		glTexCoord2f(0.0f, 1.0f);
-		glVertex3f(xPos,     yPos - (h / 2), 0.0f);
-		glEnd();
-
-	}
-	else if (cflag == 4)  //bottom-align
-	{
-		// Draw a quad with the texture on it
-		glBegin(GL_QUADS);
-		glTexCoord2f(0.0f, 0.0f);
-		glVertex3f(xPos - (w / 2), yPos + h, 0.0f);
-		glTexCoord2f(1.0f, 0.0f);
-		glVertex3f(xPos + (w / 2), yPos + h, 0.0f);
-		glTexCoord2f(1.0f, 1.0f);
-		glVertex3f(xPos + (w / 2), yPos,     0.0f);
-		glTexCoord2f(0.0f, 1.0f);
-		glVertex3f(xPos - (w / 2), yPos,     0.0f);
-		glEnd();
-	}
-
-	else
-	{
-		// Draw a quad with the texture on it
-		glBegin(GL_QUADS);
-		glTexCoord2f(0.0f, 0.0f);
-		glVertex3f(xPos - (w / 2), yPos + (h / 2), 0.0f);
-		glTexCoord2f(1.0f, 0.0f);
-		glVertex3f(xPos + (w / 2), yPos + (h / 2), 0.0f);
-		glTexCoord2f(1.0f, 1.0f);
-		glVertex3f(xPos + (w / 2), yPos - (h / 2), 0.0f);
-		glTexCoord2f(0.0f, 1.0f);
-		glVertex3f(xPos - (w / 2), yPos - (h / 2), 0.0f);
-		glEnd();
-	}
-
-	glBindTexture(GL_TEXTURE_2D, 0);
-	glDisable(GL_TEXTURE_2D);
 
 }
+
+void Image::On()
+{
+	drawOn = 1;
+}
+
+void Image::Off()
+{
+	drawOn = 0;
+}
+
+int Image::DrawState()
+{
+	return(drawOn);
+}
+

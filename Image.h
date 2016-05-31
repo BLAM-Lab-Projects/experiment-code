@@ -12,6 +12,7 @@ private:
 	GLuint texture;
 	GLfloat width;
 	GLfloat height;
+	GLint drawOn;
 public:
 	// surface must not be NULL.
 	// ratio defines the resolution of the image in meters per pixel
@@ -30,6 +31,11 @@ public:
 	// Draw the image
 	// xPos and yPos define the center point in meters
 	// theta defines the counterclockwise rotation in radians
+
+	void On();		//set the draw flag on
+	void Off();		//set the draw flag off
+	int DrawState();	//return the draw flag
+
 	void Draw(GLfloat xPos, GLfloat yPos, GLfloat theta = 0.0f);
 	// Draw the image
 	// w and h define the dimensions to draw the image

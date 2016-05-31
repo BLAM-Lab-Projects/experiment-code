@@ -17,7 +17,7 @@ Circle::Circle(GLfloat x, GLfloat y, GLfloat diam, GLfloat clr[])
 	borderWidth = .001f;
 	MakeVerts();
 	border = 1;
-	draw = 0;
+	drawOn = 0;
 
 	borderColor[0] = 0.0f;
 	borderColor[1] = 0.0f;
@@ -73,7 +73,7 @@ void Circle::SetPos(GLfloat x, GLfloat y)
 
 void Circle::Draw()
 {
-	if(draw)
+	if(drawOn)
 	{
 		if(border)
 		{
@@ -145,17 +145,17 @@ void Circle::BorderOff()
 
 void Circle::On()
 {
-	draw = 1;
+	drawOn = 1;
 }
 
 void Circle::Off()
 {
-	draw = 0;
+	drawOn = 0;
 }
 
 GLint Circle::drawState()
 {
-	return draw;
+	return drawOn;
 }
 
 GLfloat Circle::Distance(Circle* c)
@@ -174,7 +174,7 @@ GLfloat Circle::GetRadius()
 	return diameter/2;
 }
 
-void Circle::setBorderWidth(GLfloat w)
+void Circle::SetBorderWidth(GLfloat w)
 {
 	borderWidth = w;
 }

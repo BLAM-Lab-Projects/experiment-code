@@ -136,15 +136,7 @@ int CurTrial = 0;
 TargetFrame Target;
 
 //structure to keep track of what to draw in the draw_screen() function
-typedef struct {
-	int drawtrace;                //trace number to draw
-	int drawtext[5];              //write feedback text at the end of the block?
-	int drawpath;
-	int drawregion;
-	float drawvelbar;             //velocity feedback-bar parameter
-} DRAWSTRUC;
-
-DRAWSTRUC drawstruc;
+float drawvelbar;             //velocity feedback-bar parameter
 
 
 // Initializes everything and returns true if there were no errors
@@ -160,6 +152,7 @@ int LoadTrFile(char *filename);
 // Update loop (state machine)
 void game_update();
 
+bool quit = false;  //flag to cue exit of program
 
 
 
@@ -182,7 +175,6 @@ int main(int argc, char* args[])
 	
 	DataStartTime = SDL_GetTicks();
 
-	bool quit = false;
 	while (!quit)
 	{
 		int inputs_updated = 0;
@@ -413,8 +405,8 @@ bool init()
 	for (a = 0; a < NREGIONS; a++)
 	{
 		sprintf(tmpstr,"%s/Region%d.txt",REGIONPATH,a); 
-		barrierRegions[a] = Region2D::LoadPolyFromFile(tmpstr);
-		if (barrierRegions[a].GetPolySides() <= 2)
+		barrierRegions[a] = Region2D::LoadRegionFromFile(tmpstr);
+		if (barrierRegions[a].GetRegionSides() <= 2)
 			std::cerr << "   Region " << a << " did not load." << std::endl;
 		else
 			std::cerr << "   Region " << a << " loaded." << std::endl;
@@ -439,14 +431,14 @@ bool init()
 
 
 	startCircle = new Circle(curtr.startx, curtr.starty, START_RADIUS*2, startColor);
-	startCircle->setBorderWidth(0.001f);
+	startCircle->SetBorderWidth(0.001f);
 	startCircle->SetBorderColor(blkColor);
 	startCircle->On();
 	startCircle->BorderOn();
 
 	targCircle = new Circle(curtr.startx+curtr.xpos, curtr.starty+curtr.ypos, TARGET_RADIUS*2, startColor);
 	targCircle->SetBorderColor(blkColor);
-	targCircle->setBorderWidth(0.002f);
+	targCircle->SetBorderWidth(0.002f);
 	targCircle->BorderOn();
 	targCircle->Off();
 	
@@ -568,9 +560,11 @@ bool init()
 	font = TTF_OpenFont("Resources/arial.ttf", 28);
 
 	text = new Image(TTF_RenderText_Blended(font, " ", textColor));
-	
+	text->Off();
+
 	trialnumfont = TTF_OpenFont("Resources/arial.ttf", 12);
 	trialnum = new Image(TTF_RenderText_Blended(trialnumfont, "1", textColor));
+	trialnum->On();
 
 
 	SDL_WM_SetCaption("Compiled Code", NULL);
@@ -642,42 +636,43 @@ static void draw_screen()
 
 	
 	//draw the trace specified
-	if (drawstruc.drawtrace >= 0)
+	Target.trace = -1;
+	for (int a = 0; a < NTRACES; a++)
 	{
-		traces[drawstruc.drawtrace]->SetPos(curtr.startx,curtr.starty);
-		traces[drawstruc.drawtrace]->Draw();
-		Target.trace = drawstruc.drawtrace;
+		traces[a]->Draw();
+		if (traces[a]->DrawState())
+			Target.trace = a;
 	}
-	else
-		Target.trace = -1;
 	
-
 	//draw the velocity feedback bar, unless we have reached the end of the block (write text instead)
-	if ((drawstruc.drawvelbar >= 0) && (drawstruc.drawtext[0]==0))
+	if ((drawvelbar >= 0) && !text->DrawState())
 	{
+		VelBarFrame->On();
+		VelBarWin->On();
+		VelBar->On();
+
 		VelBarFrame->DrawAlign(25*PHYSICAL_WIDTH/32,5*PHYSICAL_HEIGHT/16,VelBarFrame->GetWidth(),VelBarFrame->GetHeight(),4);
 		VelBarWin->DrawAlign(25*PHYSICAL_WIDTH/32,5*PHYSICAL_HEIGHT/16+(VelBarFrame->GetHeight()/(VELBARMAX-VELBARMIN))*VELMIN,VelBarWin->GetWidth(),(VelBarFrame->GetHeight()/(VELBARMAX-VELBARMIN))*(VELMAX-VELMIN),4);
-		VelBar->DrawAlign(25*PHYSICAL_WIDTH/32,5*PHYSICAL_HEIGHT/16,VelBarFrame->GetWidth()*0.8,VelBarFrame->GetHeight()*drawstruc.drawvelbar,4);	
+		VelBar->DrawAlign(25*PHYSICAL_WIDTH/32,5*PHYSICAL_HEIGHT/16,VelBarFrame->GetWidth()*0.8,VelBarFrame->GetHeight()*drawvelbar,4);	
 	}
 	
 	//draw the region
-	if (drawstruc.drawregion >= 0)
+	Target.region = -1;
+	for (int a = 0; a < NREGIONS; a++)
 	{
-		barrierRegions[drawstruc.drawregion].Draw(curtr.startx,curtr.starty);
-		Target.path = drawstruc.drawregion;
+		barrierRegions[a].Draw();
+		if (barrierRegions[a].DrawState())
+			Target.path = a;
 	}
-	else
-		Target.path = -1;
 
 	//draw the path
-	if (drawstruc.drawpath >= 0)
+	Target.path = -1;
+	for (int a = 0; a < NPATHS; a++)
 	{
-		barrierPaths[drawstruc.drawpath].Draw(curtr.startx+curtr.xpos,curtr.starty+curtr.ypos);
-		Target.path = drawstruc.drawpath;
+		barrierPaths[a].Draw();
+		if (barrierPaths[a].DrawState())
+			Target.path = a;
 	}
-	else
-		Target.path = -1;
-
 
 	// Draw the start marker, if true
 	startCircle->Draw();
@@ -713,19 +708,7 @@ static void draw_screen()
 
 
 	// Draw text - provide feedback at the end of the block
-	if (drawstruc.drawtext[0] == 1)
-	{
-		//provide the score at the end of the block.
-		std::stringstream scorestring;
-			scorestring << "You earned " 
-				        << score 
-						<< " points.";
-			text = new Image(TTF_RenderText_Blended(font, scorestring.str().c_str(), textColor));
-			text->Draw(0.6f, 0.5f);
-			//for (int a=1; a<5; a++)
-			//	drawstruc.drawtext[a] = 0;
-	}
-	
+	text->Draw(0.6f, 0.5f);
 
 	//write the trial number
 	trialnum->Draw(PHYSICAL_WIDTH*23/24, PHYSICAL_HEIGHT*23/24);
@@ -749,6 +732,8 @@ bool hitTarget = false;
 float LastPeakVel = 0;
 bool returntostart = true;
 
+bool writefinalscore;
+
 void game_update()
 {
 
@@ -761,13 +746,11 @@ void game_update()
 
 			Target.trial = 0;
 
-			//drawstruc.drawtrace = -1; //for normal operations, show no trace
 			startCircle->SetPos(curtr.startx, curtr.starty);
 			startCircle->On();
 			targCircle->Off();
-			for (int a = 0; a < 5; a++)
-				drawstruc.drawtext[a] = 0;
-			drawstruc.drawvelbar = -1;
+
+			drawvelbar = -1;
 
 			photosensorCircle->On();
 
@@ -776,28 +759,34 @@ void game_update()
 				//if we haven't yet gotten back to the start target yet
 				startCircle->On();
 				targCircle->Off();
-				drawstruc.drawvelbar = (LastPeakVel-VELBARMIN)/(2*(VELBARMAX-VELBARMIN));  //draw the velocity feedback bar; the valid region is the lower half of the bar.
-				drawstruc.drawvelbar = (drawstruc.drawvelbar<0 ? 0 : drawstruc.drawvelbar);
-				drawstruc.drawvelbar = (drawstruc.drawvelbar>1 ? 1 : drawstruc.drawvelbar);				
+				drawvelbar = (LastPeakVel-VELBARMIN)/(2*(VELBARMAX-VELBARMIN));  //draw the velocity feedback bar; the valid region is the lower half of the bar.
+				drawvelbar = (drawvelbar<0 ? 0 : drawvelbar);
+				drawvelbar = (drawvelbar>1 ? 1 : drawvelbar);
 			}
 
-			drawstruc.drawpath = -1;
-			drawstruc.drawregion = -1;
+			//shut off all traces, except the one currently requested
 			for (int a = 0; a < NTRACES; a++)
 				traces[a]->Off();
-			
+
 			if (curtr.trace >= 0)
 			{
+				traces[curtr.trace]->SetPos(curtr.startx,curtr.starty);
 				traces[curtr.trace]->On();
-				drawstruc.drawtrace = curtr.trace;
 			}
 
+			//reset and shut off all paths
 			for (int a = 0; a < NPATHS; a++)
+			{
 				barrierPaths[a].SetPathColor(grayColor);
+				barrierPaths[a].Off();
+			}
 
+			//reset and shut off all regions
 			for (int a = 0; a < NREGIONS; a++)
-				barrierRegions[a].SetPolyColor(redColor);
-
+			{
+				barrierRegions[a].SetRegionColor(redColor);
+				barrierRegions[a].Off();
+			}
 			
 
 			if( (player->Distance(startCircle) <= CURSOR_RADIUS*1.5) && (CurTrial < NTRIALS) )
@@ -819,17 +808,13 @@ void game_update()
 			 * store the time  -- this is for new trials only!
 			 */
 
-			//drawstruc.drawtrace = -1; // for TRbase, no traces are needed
 			startCircle->On();
 			startCircle->SetColor(startColor);
 			targCircle->Off();
-			drawstruc.drawvelbar = (PeakVel-VELBARMIN)/(2*(VELBARMAX-VELBARMIN));  //draw the velocity feedback bar; the valid region is the lower half of the bar.
-			drawstruc.drawvelbar = (drawstruc.drawvelbar<0 ? 0 : drawstruc.drawvelbar);
-			drawstruc.drawvelbar = (drawstruc.drawvelbar>1 ? 1 : drawstruc.drawvelbar);				
+			drawvelbar = (PeakVel-VELBARMIN)/(2*(VELBARMAX-VELBARMIN));  //draw the velocity feedback bar; the valid region is the lower half of the bar.
+			drawvelbar = (drawvelbar<0 ? 0 : drawvelbar);
+			drawvelbar = (drawvelbar>1 ? 1 : drawvelbar);				
 
-			for (int a = 0; a < 5; a++)
-				drawstruc.drawtext[a] = 0;
-			
 			if (player->Distance(startCircle) > START_RADIUS)
 			{
 				state = Idle;
@@ -845,9 +830,26 @@ void game_update()
 				targCircle->On();
 				photosensorCircle->Off();
 
-				drawstruc.drawtrace = curtr.trace;
-				drawstruc.drawpath = curtr.path;
-				drawstruc.drawregion = curtr.region;
+				//turn on the requested trace
+				if (curtr.trace >= 0)
+				{
+					traces[curtr.trace]->SetPos(curtr.startx,curtr.starty);
+					traces[curtr.trace]->On();
+				}
+
+				//turn on the requested path
+				if (curtr.path >= 0)
+				{
+					barrierPaths[curtr.path].SetPathCenter(curtr.startx+curtr.xpos,curtr.starty+curtr.ypos);
+					barrierPaths[curtr.path].On();
+				}
+
+				//turn on the requested region
+				if (curtr.region >= 0)
+				{
+					barrierRegions[curtr.region].SetRegionCenter(curtr.startx,curtr.starty);
+					barrierRegions[curtr.region].On();
+				}
 
 				gameTimer = SDL_GetTicks();
 
@@ -896,12 +898,13 @@ void game_update()
 				reachedvelmax = true;
 			}
 
-			if (barrierPaths[drawstruc.drawpath].OnPath(player,curtr.startx+curtr.xpos,curtr.starty+curtr.ypos))
-				barrierPaths[drawstruc.drawpath].SetPathColor(orangeColor);
+			//check if the hand intersected the path
+			if (curtr.path >= 0 && barrierPaths[curtr.path].OnPath(player))
+				barrierPaths[curtr.path].SetPathColor(orangeColor);
 
-			if (barrierRegions[drawstruc.drawpath].InRegion(player,curtr.startx,curtr.starty))
-				barrierRegions[drawstruc.drawpath].SetPolyColor(orangeColor);
-
+			//check if the hand entered the region
+			if (curtr.region >= 0 && barrierRegions[curtr.region].InRegion(player))
+				barrierRegions[curtr.region].SetRegionColor(orangeColor);
 
 			
 			//check if the player hit the target
@@ -981,9 +984,9 @@ void game_update()
 
 			returntostart = false;
 
-			drawstruc.drawvelbar = (LastPeakVel-VELBARMIN)/(2*(VELBARMAX-VELBARMIN));  //draw the velocity feedback bar; the valid region is the lower half of the bar.
-			drawstruc.drawvelbar = (drawstruc.drawvelbar<0 ? 0 : drawstruc.drawvelbar);
-			drawstruc.drawvelbar = (drawstruc.drawvelbar>1 ? 1 : drawstruc.drawvelbar);				
+			drawvelbar = (LastPeakVel-VELBARMIN)/(2*(VELBARMAX-VELBARMIN));  //draw the velocity feedback bar; the valid region is the lower half of the bar.
+			drawvelbar = (drawvelbar<0 ? 0 : drawvelbar);
+			drawvelbar = (drawvelbar>1 ? 1 : drawvelbar);				
 
 			if ( (SDL_GetTicks() - gameTimer) > HOLDTIME)
 			{
@@ -1000,6 +1003,7 @@ void game_update()
 				{
 					std::cerr << "Leaving ACTIVE state to FINISHED state." << std::endl;
 					gameTimer = SDL_GetTicks();
+					writefinalscore = false;
 					state = Finished;
 				}
 				else
@@ -1018,13 +1022,34 @@ void game_update()
 			startCircle->Off();
 			targCircle->Off();
 
-			drawstruc.drawpath = -1;
-			drawstruc.drawregion = -1;
-			drawstruc.drawtrace = -1;
-
+			//drawstruc.drawpath = -1;
+			//drawstruc.drawregion = -1;
 			//drawstruc.drawtrace = -1;
+			for (int a = 0; a < NTRACES; a++)
+				traces[a]->Off();
 			
-			drawstruc.drawtext[0] = 1;
+			for (int a = 0; a < NPATHS; a++)
+				barrierPaths[a].Off();
+
+			for (int a = 0; a < NREGIONS; a++)
+				barrierRegions[a].Off();
+
+			//provide the score at the end of the block.
+			if (!writefinalscore)
+			{
+				std::stringstream scorestring;
+				scorestring << "You earned " 
+							<< score 
+							<< " points.";
+				text = new Image(TTF_RenderText_Blended(font, scorestring.str().c_str(), textColor));
+
+				writefinalscore = true;
+			}
+			text->On();
+
+			if ((SDL_GetTicks() - gameTimer) > 5000)
+				quit = true;
+
 
 			break;
 

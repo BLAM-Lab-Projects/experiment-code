@@ -18,7 +18,7 @@ private:
 	GLfloat xpos;
 	GLfloat ypos;
 	GLint border;
-	GLint draw; // controls whether the object will be drawn or not
+	GLint drawOn; // controls whether the object will be drawn or not
 	GLfloat borderWidth;
 	GLfloat borderColor[3];
 
@@ -53,7 +53,7 @@ public:
 	void On();
 	void Off();
 
-	void setBorderWidth(GLfloat w);
+	void SetBorderWidth(GLfloat w);
 	
 	GLfloat Distance(Circle* c);
 	GLfloat Distance(Object2D* c);

@@ -14,38 +14,35 @@ private:
 	GLint nSides;
 	GLfloat Vertices[4][2];  //vertices in meters from the origin (bottom left corner of the screen)
 	GLfloat color[3];  //rgb array, with range 0-1
+	GLint drawOn;
+	GLfloat xcenter;
+	GLfloat ycenter;
+
 public:
 
 	~Region2D() { }
 	
-	// Gets a requsted polygon vertex
-	GLfloat GetPolyVert(GLint i, GLint j);
+	GLfloat GetRegionVert(GLint i, GLint j);	// Gets a requsted polygon vertex
+	GLint GetRegionSides();					// Gets number of sides of the polygon
 	
-	// Gets number of sides of the polygon
-	GLint GetPolySides();
+	void SetNSides(GLint sides);			//set the number of sides in the polygon
+	void SetOneVert(GLint i, GLint j, GLfloat vert);	// Sets one polygon vertex of the object (in meters)
+	void SetRegionCenter(GLfloat centerx, GLfloat centery);		//set the center position of the region
+	void SetRegionVerts(GLfloat Verts[][2]);	// Sets the polygon vertices of the object (in meters)
+	void SetRegionColor(GLfloat clr[]);		// Sets the polygon color
+
+	static Region2D LoadRegionFromFile(char* filePath);	//load polygon from file
+
+	void Draw();		// Draw the object
 	
-	//set the number of sides in the polygon
-	void SetNSides(GLint sides);
-	
-	// Sets one polygon vertex of the object (in meters)
-	void SetOneVert(GLint i, GLint j, GLfloat vert);
-	
-	// Sets the polygon vertices of the object (in meters)
-	void SetPolyVerts(GLfloat Verts[][2]);
-	
-	// Sets the polygon color
-	void SetPolyColor(GLfloat clr[]);
-	
-	//load polygon from file
-	static Region2D LoadPolyFromFile(char* filePath);
-	
-	// Draw the object
-	void Draw(GLfloat centerx, GLfloat centery);
-	
+	void On();		//set draw flag on
+	void Off();		//set draw flag off
+	int DrawState();	//returns the draw flag
+
 	// Determines if the cursor is located within the region
-	bool InRegion(Object2D* cursor, GLfloat centerx, GLfloat centery);
-	bool InRegion(HandCursor* cursor, GLfloat centerx, GLfloat centery);
-	bool InRegion(GLfloat xcurs, GLfloat ycurs, GLfloat centerx, GLfloat centery);
+	bool InRegion(Object2D* cursor);
+	bool InRegion(HandCursor* cursor);
+	bool InRegion(GLfloat xcurs, GLfloat ycurs);
 };
 
 #endif

@@ -94,6 +94,7 @@
     <ClInclude Include="Region2D.h" />
     <ClInclude Include="Sound.h" />
     <ClInclude Include="TargetFrame.h" />
+    <ClInclude Include="Timer.h" />
     <ClInclude Include="TrackBird.h" />
   </ItemGroup>
   <ItemGroup>
@@ -109,6 +110,7 @@
     <ClCompile Include="Path2D.cpp" />
     <ClCompile Include="Region2D.cpp" />
     <ClCompile Include="Sound.cpp" />
+    <ClCompile Include="Timer.cpp" />
     <ClCompile Include="TrackBird.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
