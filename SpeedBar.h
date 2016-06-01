@@ -4,41 +4,44 @@
 
 #include "SDL.h"
 #include "SDL_opengl.h"
-#include "Rect.h"
+#include "Region2D.h"
 
 class SpeedBar
 {
 private:
 	GLfloat speed; // current speed
-	GLfloat maxSpeed; // maximum speed to represent
-	GLfloat minSpeed; // minimum speed
-	GLfloat frameColor[3]; // color of external frame
+	GLfloat frameMaxSpeed;  // maximum speed represented on bar
+	GLfloat frameMinSpeed;  // minimum speed represented on bar
+	GLfloat maxSpeed; // maximum desired speed
+	GLfloat minSpeed; // minimum desired speed
+	GLfloat frameColor[3]; // color of bar frame
 	GLfloat barColor[3]; // color of bar
-	GLfloat bgColor[3];
+	GLfloat speedregionColor[3]; //color of desired speed region
 
-	GLfloat xpos;
-	GLfloat ypos;
-	GLfloat width;
-	GLfloat height;
+	GLfloat xpos;  //x position of lower left corner of bar frame
+	GLfloat ypos;  //y position of lower left corner of bar frame
+	GLfloat width;  //width of bar frame
+	GLfloat height; //height of bar frame
 
-	GLint draw;
+	char orient; //orientation of bar frame ('h', horizontal or 'v', vertical)
 
-	Rect* frame;
-	Rect* bar;
-	Rect* background;
+	Region2D frame;
+	Region2D bar;
+	Region2D speedregion;
 
 public:
 	// constructor
-	SpeedBar(GLfloat x, GLfloat y, GLfloat w, GLfloat h, GLfloat min, GLfloat max,Rect* f, Rect*b,Rect* bg);
+	void MakeSpeedBar(GLfloat x, GLfloat y, GLfloat w, GLfloat h, GLfloat framemin, GLfloat framemax, GLfloat min, GLfloat max, GLchar or);
 
 	// destructor
 	~SpeedBar(){};
 
-	void SetBounds(GLfloat max, GLfloat min);
+	void SetFrameBounds(GLfloat max, GLfloat min);
+	void SetSpeedBounds(GLfloat max, GLfloat min);
 	void UpdateSpeed(GLfloat currSpeed);
 
-	void BarOn();
-	void BarOff();
+	void On();
+	void Off();
 
 	void Draw();
 

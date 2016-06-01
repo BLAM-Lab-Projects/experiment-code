@@ -6,78 +6,145 @@
 #include <istream>
 
 #include "SpeedBar.h"
-#include "Rect.h"
+#include "Region2D.h"
 
-SpeedBar::SpeedBar(GLfloat x, GLfloat y, GLfloat w, GLfloat h, GLfloat min, GLfloat max, Rect* f, Rect* b, Rect* bg)
+void SpeedBar::MakeSpeedBar(GLfloat x, GLfloat y, GLfloat w, GLfloat h, GLfloat framemin, GLfloat framemax, GLfloat min, GLfloat max, GLchar or)
 {
+	
+	float barlen;
+	
 	speed = 0;
+	frameMaxSpeed = framemax;
+	frameMinSpeed = framemin;
 	maxSpeed = max;
 	minSpeed = min;
-	xpos = x;
-	ypos = y;
+	xpos = x-w/2; //x is centered, xpos is the lower left corner
+	ypos = y-h/2; //y is centered, ypos is the lower left corner
 	width = w; // width on screen
 	height = h; // height on screen
+	orient = or;
 
-	frame = f;
-	bar = b;
-	background = bg;
+	if (orient == 'v')
+	{
+		
+		frame.SetNSides(4);
+		frame.SetRectDims(width, height);
+		frame.SetRegionCenter(xpos, ypos);
 
-	frame->SetPos(xpos,ypos+height*minSpeed/maxSpeed);
-	frame->SetWidth(width);
-	frame->SetHeight(height*(maxSpeed-minSpeed)/maxSpeed);
+		bar.SetNSides(4);
 
-	bar->SetPos(xpos+width/4,ypos);
-	bar->SetWidth(width/2);
-	bar->SetHeight(speed*height/maxSpeed);
+		barlen = (speed-frameMinSpeed)*height/(frameMaxSpeed-frameMinSpeed);
+		barlen = (barlen<0 ? 0 : barlen);			//restrict the minimum length to be 0
+		barlen = (barlen>height ? height : barlen);	//restrict the maximum length to be the frame length
 
-	background->SetPos(xpos,ypos);
-	background->SetWidth(width);
-	background->SetHeight(height+.05f);
+		bar.SetRectDims(width/2.0f, barlen);
+		bar.SetRegionCenter(xpos+width/4.0f, ypos);
 
-	frameColor[0] = .5f;
-	frameColor[1] = .5f;
-	frameColor[2] = .5f;
+
+		speedregion.SetNSides(4);
+		speedregion.SetRectDims(width*1.05, (maxSpeed-minSpeed)*height/(frameMaxSpeed-frameMinSpeed));
+		speedregion.SetRegionCenter(xpos-width*0.025f, ypos+((minSpeed-frameMinSpeed)*height/(frameMaxSpeed-frameMinSpeed)));
+
+	}
+	else  //default is a horizontal bar/frame
+	{
+		
+		frame.SetNSides(4);
+		frame.SetRectDims(width, height);
+		frame.SetRegionCenter(xpos, ypos);
+
+		bar.SetNSides(4);
+
+		barlen = (speed-frameMinSpeed)*width/(frameMaxSpeed-frameMinSpeed);
+		barlen = (barlen<0 ? 0 : barlen);			//restrict the minimum length to be 0
+		barlen = (barlen>width ? width : barlen);	//restrict the maximum length to be the frame length
+
+		bar.SetRectDims(barlen, height/2.0f);
+		bar.SetRegionCenter(xpos, ypos+height/4.0f);
+
+
+		speedregion.SetNSides(4);
+		speedregion.SetRectDims((maxSpeed-minSpeed)*width/(frameMaxSpeed-frameMinSpeed), height*1.05f);
+		speedregion.SetRegionCenter(xpos+((minSpeed-frameMinSpeed)*width/(frameMaxSpeed-frameMinSpeed)), ypos-height*0.025f);
+
+	}
+
+	frameColor[0] = 0.9f;
+	frameColor[1] = 0.9f;
+	frameColor[2] = 0.9f;
 
 	barColor[0] = 0.0f;
-	barColor[1] = 0.0f;
-	barColor[2] = 0.0f;
+	barColor[1] = 1.0f;
+	barColor[2] = 1.0f;
 
-	bgColor[0] = .95f;
-	bgColor[1] = .95f;
-	bgColor[2] = .95f;
+	speedregionColor[0] = 0.5f;
+	speedregionColor[1] = 0.5f;
+	speedregionColor[2] = 0.5f;
 
-	frame->SetColor(frameColor);
-	bar->SetColor(barColor);
-	bg->SetColor(bgColor);
-	
+	frame.SetRegionColor(frameColor);
+	bar.SetRegionColor(barColor);
+	speedregion.SetRegionColor(speedregionColor);
 
 }
 
-void SpeedBar::SetBounds(GLfloat min, GLfloat max)
+void SpeedBar::SetSpeedBounds(GLfloat min, GLfloat max)
 {
 	maxSpeed = max;
 	minSpeed = min;
+}
+
+void SpeedBar::SetFrameBounds(GLfloat min, GLfloat max)
+{
+	frameMaxSpeed = max;
+	frameMinSpeed = min;
 }
 
 void SpeedBar::UpdateSpeed(GLfloat currSpeed)
 {
 	speed = currSpeed;
-	bar->SetHeight(speed*height/maxSpeed);
+
+	float barlen;
+
+	if (orient == 'v')
+	{
+		barlen = (speed-frameMinSpeed)*height/(frameMaxSpeed-frameMinSpeed);
+		barlen = (barlen<0 ? 0 : barlen);			//restrict the minimum length to be 0
+		barlen = (barlen>height ? height : barlen);	//restrict the maximum length to be the frame length
+
+		bar.SetRectDims(width/2.0f, barlen);
+		bar.SetRegionCenter(xpos+width/4.0f, ypos);
+
+	}
+	else  //default is a horizontal bar/frame
+	{
+		barlen = (speed-frameMinSpeed)*width/(frameMaxSpeed-frameMinSpeed);
+		barlen = (barlen<0 ? 0 : barlen);			//restrict the minimum length to be 0
+		barlen = (barlen>width ? width : barlen);	//restrict the maximum length to be the frame length
+
+		bar.SetRectDims(barlen, height/2.0f);
+		bar.SetRegionCenter(xpos, ypos+height/4.0f);
+	}
+
 }
 
-void SpeedBar::BarOn()
+void SpeedBar::On()
 {
-	draw = 1;
+	frame.On();
+	bar.On();
+	speedregion.On();
 }
 
-void SpeedBar::BarOff()
+void SpeedBar::Off()
 {
-	draw = 0;
+	frame.Off();
+	bar.Off();
+	speedregion.Off();
+
 }
 
 void SpeedBar::Draw()
 {
-	background->Draw();
-	frame->Draw();
-	bar->Draw();
+	frame.Draw();
+	speedregion.Draw();
+	bar.Draw();
 }

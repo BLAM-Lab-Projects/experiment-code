@@ -41,6 +41,13 @@ void Region2D::SetRegionColor(GLfloat clr[])
 	color[2] = clr[2];
 }
 
+void Region2D::SetBorderColor(GLfloat clr[])
+{
+	borderColor[0] = clr[0];
+	borderColor[1] = clr[1];
+	borderColor[2] = clr[2];
+}
+
 void Region2D::SetRegionCenter(GLfloat centerx, GLfloat centery)
 {
 	xcenter = centerx;
@@ -56,6 +63,45 @@ GLint Region2D::GetRegionSides()
 {
 	return(nSides);
 }
+
+GLfloat Region2D::GetRectWidth()
+{
+	if (nSides == 4)
+		return(Vertices[1][0]-Vertices[0][0]);
+	else
+		return(-1);
+}
+
+GLfloat Region2D::GetRectHeight()
+{
+	if (nSides == 4)
+		return(Vertices[2][1]-Vertices[0][1]);
+	else
+		return(-1);
+}
+
+int Region2D::SetRectDims(GLfloat width, GLfloat height)
+{
+	if (nSides == 4)
+	{
+		//create a rectangle of width and heigh, with the bottom left corner at (0,0)
+		Vertices[0][0] = 0;
+		Vertices[0][1] = 0;
+		Vertices[1][0] = width;
+		Vertices[1][1] = 0;
+		Vertices[2][0] = width;
+		Vertices[2][1] = height;
+		Vertices[3][0] = 0;
+		Vertices[3][1] = height;
+
+		return(0);
+	}
+	else
+		return(-1);  //failed to set vertices because dimension of object is not a rectangle
+
+
+}
+
 
 Region2D Region2D::LoadRegionFromFile(char* filePath)
 {
@@ -97,6 +143,10 @@ Region2D Region2D::LoadRegionFromFile(char* filePath)
 
 	region.SetRegionCenter(0.0f, 0.0f);
 
+	float blkColor[3] = {0.0f, 0.0f, 0.0f};
+	region.SetBorderColor(blkColor);
+	region.BorderOff();
+	
 	region.Off();
 
 	return(region);
@@ -107,11 +157,29 @@ void Region2D::Draw()
 {
 			
 	// Draw the polygon
-	glColor3f(color[0],color[1],color[2]);
-	
 	if(drawOn)
 	{
 
+		if (borderOn)
+		{
+			glColor3f(borderColor[0],borderColor[1],borderColor[2]);
+			glLineWidth(3.0f);
+			glBegin(GL_LINE_STRIP);
+
+			for (int i = 0; i < nSides; i++)
+			{
+				//straight line segment
+				glVertex3f(Vertices[i][0]+xcenter, Vertices[i][1]+ycenter, 0.0f);
+			}
+			glEnd();
+
+			//reset defaults after the draw
+			glColor3f(1.0f, 1.0f, 1.0f);
+			glLineWidth(1.0f);
+		}
+
+
+		glColor3f(color[0],color[1],color[2]);
 		glBegin(GL_TRIANGLE_FAN);
 	
 		for (int i = 0; i<nSides; i++)
@@ -120,6 +188,8 @@ void Region2D::Draw()
 		glEnd();
 		glColor3f(1.0f, 1.0f, 1.0f);
 
+
+		
 	}
 }
 
@@ -216,3 +286,13 @@ int Region2D::DrawState()
 	return(drawOn);
 }
 
+void Region2D::BorderOn()
+{
+	borderOn = 1;
+
+}
+
+void Region2D::BorderOff()
+{
+	borderOn = 0;
+}

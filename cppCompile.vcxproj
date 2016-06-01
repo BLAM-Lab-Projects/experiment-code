@@ -93,6 +93,7 @@
     <ClInclude Include="Path2D.h" />
     <ClInclude Include="Region2D.h" />
     <ClInclude Include="Sound.h" />
+    <ClInclude Include="SpeedBar.h" />
     <ClInclude Include="TargetFrame.h" />
     <ClInclude Include="Timer.h" />
     <ClInclude Include="TrackBird.h" />
@@ -110,6 +111,7 @@
     <ClCompile Include="Path2D.cpp" />
     <ClCompile Include="Region2D.cpp" />
     <ClCompile Include="Sound.cpp" />
+    <ClCompile Include="SpeedBar.cpp" />
     <ClCompile Include="Timer.cpp" />
     <ClCompile Include="TrackBird.cpp" />
   </ItemGroup>
