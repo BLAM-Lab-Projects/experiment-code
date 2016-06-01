@@ -136,10 +136,6 @@ int CurTrial = 0;
 //target structure; keep track of the target and other parameters, for writing out to data stream
 TargetFrame Target;
 
-//structure to keep track of what to draw in the draw_screen() function
-float drawvelbar;             //velocity feedback-bar parameter
-
-
 // Initializes everything and returns true if there were no errors
 bool init();
 // Sets up OpenGL
@@ -650,7 +646,7 @@ static void draw_screen()
 			Target.trace = a;
 	}
 	
-	//draw the velocity feedback bar, unless we have reached the end of the block (write text instead)
+	//draw the velocity feedback bar
 	velBar.Draw();
 	
 	//draw the region
@@ -868,7 +864,6 @@ void game_update()
 
 		case Active:
 			
-			//drawstruc.drawtrace = -1;
 			startCircle->On();
 			targCircle->On();
 
@@ -884,8 +879,9 @@ void game_update()
 			if ((player->GetVel() > PeakVel) && (player->Distance(startCircle) <= targCircle->Distance(startCircle)) )
 				PeakVel = player->GetVel();
 
-			velBar.UpdateSpeed(PeakVel);
-			velBar.On();
+			//if uncommented, will update speed continuously during reach
+			//velBar.UpdateSpeed(PeakVel);
+			//velBar.On();
 
 			//note if the velocity exceeded the minimum required velocity
 			if (player->GetVel() > VELMIN)
@@ -1030,9 +1026,6 @@ void game_update()
 
 			velBar.Off();
 
-			//drawstruc.drawpath = -1;
-			//drawstruc.drawregion = -1;
-			//drawstruc.drawtrace = -1;
 			for (int a = 0; a < NTRACES; a++)
 				traces[a]->Off();
 			
