@@ -752,9 +752,11 @@ void game_update()
 				//if we haven't yet gotten back to the start target yet
 				startCircle->On();
 				targCircle->Off();
-				drawvelbar = (LastPeakVel-VELBARMIN)/(2*(VELBARMAX-VELBARMIN));  //draw the velocity feedback bar; the valid region is the lower half of the bar.
-				drawvelbar = (drawvelbar<0 ? 0 : drawvelbar);
-				drawvelbar = (drawvelbar>1 ? 1 : drawvelbar);
+				//drawvelbar = (LastPeakVel-VELBARMIN)/(2*(VELBARMAX-VELBARMIN));  //draw the velocity feedback bar; the valid region is the lower half of the bar.
+				//drawvelbar = (drawvelbar<0 ? 0 : drawvelbar);
+				//drawvelbar = (drawvelbar>1 ? 1 : drawvelbar);
+				velBar.UpdateSpeed(LastPeakVel);
+				velBar.On();
 			}
 
 			//shut off all traces, except the one currently requested
