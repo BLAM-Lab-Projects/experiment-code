@@ -61,8 +61,6 @@ HandCursor* player = NULL;
 Circle* startCircle = NULL;
 Circle* targCircle = NULL;
 Circle* photosensorCircle = NULL;
-//Object2D* targettraces[NTRACES];
-//float barrierColor[3] = {.5, .5, .5};
 Region2D barrierRegions[NREGIONS];
 Path2D barrierPaths[NPATHS];
 Object2D* traces[NTRACES];
@@ -80,12 +78,9 @@ Uint32 hoverTimer;
 
 //velocity-tracking variables
 float PeakVel;
-//Image* VelBarFrame;
-//Image* VelBarWin;
-//Image* VelBar;
 SpeedBar velBar;
 
-//Photosensor variables
+//Photosensor (FTDI) variables
 FT_HANDLE ftHandle;
 bool sensorsActive;
 
@@ -409,22 +404,7 @@ bool init()
 			std::cerr << "   Region " << a << " loaded." << std::endl;
 	}
 
-
-	/*
-	//load the velocity bar feedback frame
-	VelBarFrame = Image::LoadFromFile("Resources/velbarframe.png");
-	if (VelBarFrame == NULL)
-		std::cerr << "Image VelBarFrame did not load." << std::endl;
-
-	VelBarWin = Image::LoadFromFile("Resources/velbarwin.png");
-	if (VelBarWin == NULL)
-		std::cerr << "Image VelBarWin did not load." << std::endl;
-
-	//load the velocity bar
-	VelBar = Image::LoadFromFile("Resources/velbar.png");
-	if (VelBar == NULL)
-		std::cerr << "Image VelBar did not load." << std::endl;
-	*/
+	//initialize the speed bar object
 	//velBar.MakeSpeedBar(PHYSICAL_WIDTH/2, PHYSICAL_HEIGHT*3/4, 0.2, 0.02, 0.0, 2.0, 0.5, 1.5,'h');
 	velBar.MakeSpeedBar(PHYSICAL_WIDTH*3/4, PHYSICAL_HEIGHT/2, 0.02, 0.2, 0.0, 2.0, 0.5, 1.5,'v');
 	velBar.On();
@@ -612,7 +592,6 @@ void clean_up()
 	delete scorebeep;
 	delete errorbeep;
 	
-	
 	for (int a = 0; a < NTRACES; a++)
 		delete traces[a];
 	
@@ -752,9 +731,7 @@ void game_update()
 				//if we haven't yet gotten back to the start target yet
 				startCircle->On();
 				targCircle->Off();
-				//drawvelbar = (LastPeakVel-VELBARMIN)/(2*(VELBARMAX-VELBARMIN));  //draw the velocity feedback bar; the valid region is the lower half of the bar.
-				//drawvelbar = (drawvelbar<0 ? 0 : drawvelbar);
-				//drawvelbar = (drawvelbar>1 ? 1 : drawvelbar);
+
 				velBar.UpdateSpeed(LastPeakVel);
 				velBar.On();
 			}
@@ -806,9 +783,7 @@ void game_update()
 			startCircle->On();
 			startCircle->SetColor(startColor);
 			targCircle->Off();
-			//drawvelbar = (PeakVel-VELBARMIN)/(2*(VELBARMAX-VELBARMIN));  //draw the velocity feedback bar; the valid region is the lower half of the bar.
-			//drawvelbar = (drawvelbar<0 ? 0 : drawvelbar);
-			//drawvelbar = (drawvelbar>1 ? 1 : drawvelbar);
+
 			velBar.UpdateSpeed(PeakVel);
 			velBar.On();
 
@@ -983,10 +958,6 @@ void game_update()
 		case ShowResult:
 
 			returntostart = false;
-
-			//drawvelbar = (LastPeakVel-VELBARMIN)/(2*(VELBARMAX-VELBARMIN));  //draw the velocity feedback bar; the valid region is the lower half of the bar.
-			//drawvelbar = (drawvelbar<0 ? 0 : drawvelbar);
-			//drawvelbar = (drawvelbar>1 ? 1 : drawvelbar);				
 
 			velBar.UpdateSpeed(LastPeakVel);
 			velBar.On();
