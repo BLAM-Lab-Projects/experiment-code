@@ -20,6 +20,7 @@
 #include "Region2D.h"
 #include "Sound.h"
 #include "SpeedBar.h"
+#include "Timer.h"
 
 #include "config.h"
 
@@ -75,8 +76,11 @@ TTF_Font* trialnumfont = NULL;
 SDL_Color textColor = {0, 0, 0};
 DataWriter* writer = NULL;
 GameState state;
-Uint32 gameTimer;
-Uint32 hoverTimer;
+Timer* trialTimer;
+Timer* hoverTimer;
+
+//Uint32 gameTimer;
+//Uint32 hoverTimer;
 
 //velocity-tracking variables
 float PeakVel;
@@ -219,7 +223,7 @@ int main(int argc, char* args[])
 			}
 		}
 
-		if ((CurTrial >= NTRIALS) && (state == Finished) && (SDL_GetTicks() - gameTimer >= 10000))
+		if ((CurTrial >= NTRIALS) && (state == Finished) && (trialTimer->Elapsed() >= 10000))
 			quit = true;
 
 		// Get data from input devices
@@ -571,6 +575,8 @@ bool init()
 
 	SDL_WM_SetCaption("Compiled Code", NULL);
 
+	hoverTimer = new Timer();
+	trialTimer = new Timer();
 	
 	// Set the initial game state
 	state = Idle; 
@@ -786,8 +792,8 @@ void game_update()
 
 			if( (player->Distance(startCircle) <= CURSOR_RADIUS*1.5) && (CurTrial < NTRIALS) )
 			{
-				hoverTimer = SDL_GetTicks();
-				gameTimer = SDL_GetTicks();
+				hoverTimer->Reset();
+				trialTimer->Reset();
 				
 				std::cerr << "Leaving IDLE state." << std::endl;
 				
@@ -817,7 +823,7 @@ void game_update()
 				state = Idle;
 			}
 			// If player hovers long enough, set state to Active
-			else if (SDL_GetTicks() - hoverTimer >= curtr.iti)
+			else if (hoverTimer->Elapsed() >= curtr.iti)
 			{
 				Target.trial = CurTrial+1;
 
@@ -848,7 +854,7 @@ void game_update()
 					barrierRegions[curtr.region].On();
 				}
 
-				gameTimer = SDL_GetTicks();
+				trialTimer->Reset();
 
 				reachedvelmin = false;
 				reachedvelmax = false;
@@ -872,9 +878,9 @@ void game_update()
 			//detect the onset of hand movement, for calculating latency
 			if (!mvtStarted && (player->Distance(startCircle) > START_RADIUS*1.5))
 			{
-				timeMvtStart = SDL_GetTicks();
+				//timeMvtStart = SDL_GetTicks();
 				mvtStarted = true;
-				Target.lat = timeMvtStart - gameTimer;
+				Target.lat = trialTimer->Elapsed();
 			}
 
 			//keep track of the maximum (peak) velocity -- this will be plotted in the feedback bar
@@ -919,19 +925,19 @@ void game_update()
 			if (!mvmtEnded && mvtStarted && (player->GetVel() < VEL_MVT_TH) && (timeMvtStart-SDL_GetTicks())>200 && player->Distance(startCircle)>4*START_RADIUS)
 				{
 					mvmtEnded = true;
-					hoverTimer = SDL_GetTicks();
+					hoverTimer->Reset();
 					std::cerr << "Mvmt Ended: " << float(SDL_GetTicks()) << std::endl;
 				}
 
 			if ((player->GetVel() >= VEL_MVT_TH))
 			{
 				mvmtEnded = false;
-				hoverTimer = SDL_GetTicks();
+				hoverTimer->Reset();
 			}
 
 
 			//if the trial duration is exceeded, the hand has stopped moving, or the hand has exceeded the target array, end the trial
-			if ( ((SDL_GetTicks() - gameTimer) > MAX_TRIAL_DURATION) || (mvmtEnded && (SDL_GetTicks()-hoverTimer)>VEL_END_TIME ) || (player->Distance(startCircle) > targCircle->Distance(startCircle) ) )
+			if ( (trialTimer->Elapsed() > MAX_TRIAL_DURATION) || (mvmtEnded && hoverTimer->Elapsed()>VEL_END_TIME ) || (player->Distance(startCircle) > targCircle->Distance(startCircle) ) )
 			{
 				LastPeakVel = PeakVel;
 				PeakVel = 0;
@@ -973,7 +979,7 @@ void game_update()
 				}
 
 				//go to ShowResult state
-				gameTimer = SDL_GetTicks();
+				trialTimer->Reset();// = SDL_GetTicks();
 				state = ShowResult;
 
 			}
@@ -983,16 +989,11 @@ void game_update()
 		case ShowResult:
 
 			returntostart = false;
-
-			//drawvelbar = (LastPeakVel-VELBARMIN)/(2*(VELBARMAX-VELBARMIN));  //draw the velocity feedback bar; the valid region is the lower half of the bar.
-			//drawvelbar = (drawvelbar<0 ? 0 : drawvelbar);
-			//drawvelbar = (drawvelbar>1 ? 1 : drawvelbar);				
-
 			velBar.UpdateSpeed(LastPeakVel);
 			velBar.On();
 
 
-			if ( (SDL_GetTicks() - gameTimer) > HOLDTIME)
+			if ( trialTimer->Elapsed() > HOLDTIME)
 			{
 
 				CurTrial++;
@@ -1006,13 +1007,13 @@ void game_update()
 				if (CurTrial >= NTRIALS)
 				{
 					std::cerr << "Leaving ACTIVE state to FINISHED state." << std::endl;
-					gameTimer = SDL_GetTicks();
+					trialTimer->Reset();
 					writefinalscore = false;
 					state = Finished;
 				}
 				else
 				{
-					hoverTimer = SDL_GetTicks();
+					hoverTimer->Reset();
 					std::cerr << "Leaving ACTIVE state to Idle state." << std::endl;
 					state = Idle;
 				}
@@ -1050,7 +1051,7 @@ void game_update()
 			}
 			text->On();
 
-			if ((SDL_GetTicks() - gameTimer) > 5000)
+			if (trialTimer->Elapsed() > 5000)
 				quit = true;
 
 
