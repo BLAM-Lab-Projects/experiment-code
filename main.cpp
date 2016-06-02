@@ -78,6 +78,7 @@ DataWriter* writer = NULL;
 GameState state;
 Timer* trialTimer;
 Timer* hoverTimer;
+Timer* movTimer;
 
 //Uint32 gameTimer;
 //Uint32 hoverTimer;
@@ -577,6 +578,7 @@ bool init()
 
 	hoverTimer = new Timer();
 	trialTimer = new Timer();
+	movTimer = new Timer();
 	
 	// Set the initial game state
 	state = Idle; 
@@ -720,7 +722,6 @@ static void draw_screen()
 
 //game update loop - state machine controlling the status of the experiment
 bool mvtStarted = false;
-Uint32 timeMvtStart;
 
 bool reachedvelmin = false;
 bool reachedvelmax = false;
@@ -878,8 +879,8 @@ void game_update()
 			//detect the onset of hand movement, for calculating latency
 			if (!mvtStarted && (player->Distance(startCircle) > START_RADIUS*1.5))
 			{
-				//timeMvtStart = SDL_GetTicks();
 				mvtStarted = true;
+				movTimer->Reset();
 				Target.lat = trialTimer->Elapsed();
 			}
 
@@ -922,7 +923,7 @@ void game_update()
 
 
 			//detect movement offset
-			if (!mvmtEnded && mvtStarted && (player->GetVel() < VEL_MVT_TH) && (timeMvtStart-SDL_GetTicks())>200 && player->Distance(startCircle)>4*START_RADIUS)
+			if (!mvmtEnded && mvtStarted && (player->GetVel() < VEL_MVT_TH) && (movTimer->Elapsed()>200) && player->Distance(startCircle)>4*START_RADIUS)
 				{
 					mvmtEnded = true;
 					hoverTimer->Reset();
