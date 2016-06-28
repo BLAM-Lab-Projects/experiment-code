@@ -115,7 +115,7 @@ int TrackBird::InitializeBird(TrackSYSCONFIG *sysconfig)
 		int j;
 
 		sysconfig->datatype = DOUBLE_POSITION_MATRIX_TIME_Q;
-		sysconfig->reportRate = 3;
+		//sysconfig->reportRate = 3;
 
 		SENSOR_CONFIGURATION pSensor[5];
 		SYSTEM_CONFIGURATION trakSysConfig;
