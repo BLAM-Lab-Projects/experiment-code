@@ -9,24 +9,30 @@ class Timer
 {
 private:
 	Uint32 startTime;
+	Uint32 stopTime;
 	Uint32 alarmTime;
 	Sound* alarmSound;
-	bool alarmSounded;
+	int nAlarms;
+	int alarmSounded;
 	bool alarmOn;
 	bool stopped;
 
 public:
-	Timer(Uint32 alarmtime, Sound* alarm);
+	Timer(Uint32 alarmtime, Sound* alarm, int NAlarms);
 	Timer(void);
 	~Timer(void);
 
 	void Reset();
 	Uint32 Elapsed();
-	void SetAlarmTime(Uint32 alarmT);
-	Uint32 Remaining();
+	Uint32 GetStartTime();
+	Uint32 GetStopTime();
+	void SetAlarmTime(Uint32 alarmT, int NAlarms);
+	Uint32 TimeToNextAlarm();
+	Uint32 RemainingTime();
 	void Stop();
+	bool CheckStopped();
 
-	void CheckAlarm();
+	bool CheckAlarm();
 };
 
 #endif
