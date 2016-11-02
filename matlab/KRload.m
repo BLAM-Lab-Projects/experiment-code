@@ -74,15 +74,15 @@ for a = 1:numBirds
     end
     
     if isfield(header,'Sampling_Rate') && isfield(data{a},'HandX')
-        data{a}.Time = [0:1:length(data{a}.HandX)-1]'/header.Sampling_Rate*1000;
+        data{a}.MakeTime = [0:1:length(data{a}.HandX)-1]'/header.Sampling_Rate*1000;
     elseif isfield(data{a},'HandX')
-        data{a}.Time = [0:1:length(data{a}.HandX)-1]';
+        data{a}.MakeTime = [0:1:length(data{a}.HandX)-1]';
     elseif isfield(header,'Sampling_Rate') && isfield(data{a},'StickX')
-        data{a}.Time = [0:1:length(data{a}.StickX)-1]'/header.Sampling_Rate*1000;
+        data{a}.MakeTime = [0:1:length(data{a}.StickX)-1]'/header.Sampling_Rate*1000;
     elseif isfield(data{a},'StickX')
-        data{a}.Time = data{a}.SystemTime-data{a}.SystemTime(1);
+        data{a}.MakeTime = data{a}.SystemTime-data{a}.SystemTime(1);
     else  %unrecognized trial table type
-        data{a}.Time = [];
+        data{a}.MakeTime = [];
     end
     
     %identify devide, if possible
