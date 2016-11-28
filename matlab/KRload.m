@@ -23,8 +23,7 @@ function [data, header, filename, filepath] = KRload(filename, filepath)
 
     fid = fopen([filepath filename], 'r');
 
-    doloop = true;
-    while doloop
+    while true
         temp = fgetl(fid);
         if strcmp(temp, '--')
             %detect the end of the header
@@ -32,7 +31,7 @@ function [data, header, filename, filepath] = KRload(filename, filepath)
             header.cols = textscan(temp, '%s');
             header.cols = header.cols{1};
             fgetl(fid);
-            doloop = false;
+            break
         else
             hvals = textscan(temp, '%s %s');
             if ~isempty(str2num(char(hvals{2})))
