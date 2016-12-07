@@ -48,11 +48,27 @@ void Region2D::SetBorderColor(GLfloat clr[])
 	borderColor[2] = clr[2];
 }
 
+void Region2D::SetBorderWidth(GLfloat width)
+{
+	borderWidth = width;
+}
+
 void Region2D::SetRegionCenter(GLfloat centerx, GLfloat centery)
 {
 	xcenter = centerx;
 	ycenter = centery;
 }
+
+GLfloat Region2D::GetRegionCenterX()
+{
+	return(xcenter);
+}
+
+GLfloat Region2D::GetRegionCenterY()
+{
+	return(ycenter);
+}
+
 
 GLfloat Region2D::GetRegionVert(GLint i, GLint j)
 {
@@ -84,7 +100,7 @@ int Region2D::SetRectDims(GLfloat width, GLfloat height)
 {
 	if (nSides == 4)
 	{
-		//create a rectangle of width and heigh, with the bottom left corner at (0,0)
+		//create a rectangle of width and heigh, centered at (0,0)
 		Vertices[0][0] = 0;
 		Vertices[0][1] = 0;
 		Vertices[1][0] = width;
@@ -102,6 +118,28 @@ int Region2D::SetRectDims(GLfloat width, GLfloat height)
 
 }
 
+
+int Region2D::SetCenteredRectDims(GLfloat width, GLfloat height)
+{
+	if (nSides == 4)
+	{
+		//create a rectangle of width and heigh, centered at (0,0)
+		Vertices[0][0] = -width/2;
+		Vertices[0][1] = -height/2;
+		Vertices[1][0] = width/2;
+		Vertices[1][1] = -height/2;
+		Vertices[2][0] = width/2;
+		Vertices[2][1] = height/2;
+		Vertices[3][0] = -width/2;
+		Vertices[3][1] = height/2;
+
+		return(0);
+	}
+	else
+		return(-1);  //failed to set vertices because dimension of object is not a rectangle
+
+
+}
 
 Region2D Region2D::LoadRegionFromFile(char* filePath)
 {
@@ -145,6 +183,7 @@ Region2D Region2D::LoadRegionFromFile(char* filePath)
 
 	float blkColor[3] = {0.0f, 0.0f, 0.0f};
 	region.SetBorderColor(blkColor);
+	region.SetBorderWidth(3.0f);
 	region.BorderOff();
 	
 	region.Off();
@@ -160,25 +199,6 @@ void Region2D::Draw()
 	if(drawOn)
 	{
 
-		if (borderOn)
-		{
-			glColor3f(borderColor[0],borderColor[1],borderColor[2]);
-			glLineWidth(3.0f);
-			glBegin(GL_LINE_STRIP);
-
-			for (int i = 0; i < nSides; i++)
-			{
-				//straight line segment
-				glVertex3f(Vertices[i][0]+xcenter, Vertices[i][1]+ycenter, 0.0f);
-			}
-			glEnd();
-
-			//reset defaults after the draw
-			glColor3f(1.0f, 1.0f, 1.0f);
-			glLineWidth(1.0f);
-		}
-
-
 		glColor3f(color[0],color[1],color[2]);
 		glBegin(GL_TRIANGLE_FAN);
 	
@@ -188,6 +208,25 @@ void Region2D::Draw()
 		glEnd();
 		glColor3f(1.0f, 1.0f, 1.0f);
 
+
+		if (borderOn)
+		{
+			glColor3f(borderColor[0],borderColor[1],borderColor[2]);
+			glLineWidth(borderWidth);
+			glBegin(GL_LINE_STRIP);
+
+			for (int i = 0; i < nSides; i++)
+			{
+				//straight line segment
+				glVertex3f(Vertices[i][0]+xcenter, Vertices[i][1]+ycenter, 0.0f);
+			}
+			glVertex3f(Vertices[0][0]+xcenter, Vertices[0][1]+ycenter, 0.0f);
+			glEnd();
+
+			//reset defaults after the draw
+			glColor3f(1.0f, 1.0f, 1.0f);
+			glLineWidth(1.0f);
+		}
 
 		
 	}
@@ -295,4 +334,16 @@ void Region2D::BorderOn()
 void Region2D::BorderOff()
 {
 	borderOn = 0;
+}
+
+
+
+GLfloat Region2D::Distance(Circle* c)
+{
+	return sqrtf(powf(c->GetX() - xcenter, 2.0f) + powf(c->GetY() - ycenter, 2.0f));
+}
+
+GLfloat Region2D::Distance(Object2D* c)
+{
+	return sqrtf(powf(c->GetX() - xcenter, 2.0f) + powf(c->GetY() - ycenter, 2.0f));
 }
