@@ -100,7 +100,7 @@ int Region2D::SetRectDims(GLfloat width, GLfloat height)
 {
 	if (nSides == 4)
 	{
-		//create a rectangle of width and heigh, centered at (0,0)
+		//create a rectangle of width and heigh with bottom left corner at (0,0)
 		Vertices[0][0] = 0;
 		Vertices[0][1] = 0;
 		Vertices[1][0] = width;
