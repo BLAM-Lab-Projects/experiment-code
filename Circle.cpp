@@ -150,7 +150,7 @@ void Circle::Draw()
 
 void Circle::UpdatePos()
 {
-	Uint32 dt = CircTimer.Elapsed()-timerdelay;
+	int dt = int(CircTimer.Elapsed())-timerdelay;
 	
 	if (dt > 0)
 	{

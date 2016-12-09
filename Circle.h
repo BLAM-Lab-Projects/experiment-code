@@ -22,7 +22,7 @@ private:
 	GLfloat xpos;
 	GLfloat ypos;
 	Timer CircTimer;  //timer to keep track of elapsed time from target onset
-	Uint32 timerdelay; //hold time before the timer takes effect, in msec
+	int timerdelay; //hold time before the timer takes effect, in msec
 	GLfloat xvel;  //velocity in m/s
 	GLfloat yvel;
 	GLint border;
