@@ -56,7 +56,6 @@ enum GameState
 SDL_Event event;
 SDL_Surface* screen = NULL;
 
-Circle* cursor[BIRDCOUNT + 1];
 HandCursor* curs[BIRDCOUNT + 1];
 HandCursor* player = NULL;
 Circle* startCircle = NULL;
@@ -511,9 +510,8 @@ bool init()
 		*/
 		for (a = 1; a <= BIRDCOUNT; a++)
 		{
-			cursor[a] = new Circle(curtr.startx, curtr.starty, CURSOR_RADIUS*2, cursColor);
-			cursor[a]->BorderOff();
-			curs[a] = new HandCursor(cursor[a]); 
+			curs[a] = new HandCursor(curtr.startx, curtr.starty, CURSOR_RADIUS*2, cursColor);
+			curs[a]->BorderOff();
 			curs[a]->SetOrigin(curtr.startx, curtr.starty);
 		}
 
@@ -523,8 +521,7 @@ bool init()
 	else
 	{
 		// Use mouse control
-		cursor[0] = new Circle(curtr.startx, curtr.starty, CURSOR_RADIUS*2, cursColor);
-		curs[0] = new HandCursor(cursor[0]);
+		curs[0] = new HandCursor(curtr.startx, curtr.starty, CURSOR_RADIUS*2, cursColor);
 		curs[0]->SetOrigin(curtr.startx, curtr.starty);
 		player = curs[0];
 	}
