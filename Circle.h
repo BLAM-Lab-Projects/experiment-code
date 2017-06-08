@@ -10,7 +10,7 @@
 // creates a circle object to render as the target
 class Circle
 {
-private:
+protected:
 	GLint nVerts;
 	GLfloat vertices[2][100]; // vertices in meters from center
 	GLfloat verticesInner[2][100];
