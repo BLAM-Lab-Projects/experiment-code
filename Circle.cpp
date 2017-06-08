@@ -42,6 +42,7 @@ void Circle::SetDiameter(GLfloat diam)
 void Circle::SetRadius(GLfloat rad)
 {
 	diameter = 2*rad;
+	startdiameter = diameter;
 	MakeVerts();
 }
 
